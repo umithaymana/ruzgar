@@ -1,0 +1,90 @@
+{
+  "n": 130,
+  "gecti_pct": 57.7,
+  "bulamadim_pct": 31.5,
+  "ort_kapsama": 0.573,
+  "kaynak_iste_n": 15,
+  "kaynak_verme_pct": 0.0,
+  "kunye_genel_pct": 0.0,
+  "coklu_eser_pct": 0.0,
+  "coklu_eser_kaynak_iste_pct": 0.0,
+  "uydurma_supheli_soru": 19,
+  "uydurma_supheli_atif": 23,
+  "uydurma_supheli_idler": [
+    "din-03",
+    "din-09",
+    "din-37",
+    "din-48",
+    "din-49",
+    "din-50",
+    "din-78",
+    "din-79",
+    "din-97",
+    "din-98",
+    "din-100",
+    "din-107",
+    "din-114",
+    "din-117",
+    "din-118",
+    "din-119",
+    "din-120",
+    "din-122",
+    "din-130"
+  ],
+  "sade_ort": null,
+  "sade_n": 0,
+  "medyan_sn": 8.54,
+  "p90_sn": 31.49,
+  "alt": {
+    "akaid": {
+      "n": 21,
+      "gecti_pct": 57.1,
+      "bulamadim_pct": 28.6
+    },
+    "fikih": {
+      "n": 18,
+      "gecti_pct": 33.3,
+      "bulamadim_pct": 66.7
+    },
+    "hadis": {
+      "n": 11,
+      "gecti_pct": 54.5,
+      "bulamadim_pct": 45.5
+    },
+    "kissa": {
+      "n": 8,
+      "gecti_pct": 12.5,
+      "bulamadim_pct": 87.5
+    },
+    "siyer": {
+      "n": 13,
+      "gecti_pct": 69.2,
+      "bulamadim_pct": 23.1
+    },
+    "tarih": {
+      "n": 4,
+      "gecti_pct": 75.0,
+      "bulamadim_pct": 0.0
+    },
+    "tasavvuf": {
+      "n": 24,
+      "gecti_pct": 83.3,
+      "bulamadim_pct": 16.7
+    },
+    "tefsir": {
+      "n": 11,
+      "gecti_pct": 36.4,
+      "bulamadim_pct": 0.0
+    },
+    "temel": {
+      "n": 20,
+      "gecti_pct": 70.0,
+      "bulamadim_pct": 20.0
+    }
+  },
+  "saglayici": {
+    "gemini": 55,
+    "miss_kutuphane": 39,
+    "None": 36
+  }
+}

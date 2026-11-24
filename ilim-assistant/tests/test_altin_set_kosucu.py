@@ -8,14 +8,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import altin_set_kos as k  # noqa: E402
 
 
-def test_soru_seti_12_raf_x_20():
+def test_soru_seti_12_raf():
+    """12 raf; din rafı D1 ile ≥ 80 soruya genişletildi (ilk 20 soru değişmedi), diğer raflar 20."""
     s = k.yukle_sorular()
-    assert len(s) == 240
     raflar = {x["raf"] for x in s}
     assert len(raflar) == 12
     for r in raflar:
-        assert sum(1 for x in s if x["raf"] == r) == 20
-    assert len({x["id"] for x in s}) == 240
+        n = sum(1 for x in s if x["raf"] == r)
+        assert (n >= 80) if r == "din" else (n == 20), (r, n)
+    assert len({x["id"] for x in s}) == len(s)
+    assert len(s) >= 240 + 60
     assert all(x["gruplar"] and all(g for g in x["gruplar"]) for x in s)
 
 

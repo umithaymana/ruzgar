@@ -1,0 +1,8496 @@
+{
+"surum": "din-terim-sozlugu-v1-2026-11-24",
+"alan": "din",
+"aciklama": "K3 — TR/AR/EN din terim sözlüğü (VERİ). Kod konuya özel if-else içermez; yeni terim eklemek yalnız bu dosyaya satır eklemektir. 'tr' = katlanmış (ı→i, ş→s ...) ön-ek eşleşmeli ifade/kök; 'ar' = Arapça kaynak dilinde arama/anahtar terimleri (ilk = en özgül); 'en' = ileride İngilizce kaynaklar için; 'w' = özgüllük ağırlığı (bileşik terim > tek sözcük); 'alan' = shard-grubu ipucu anahtarı. Sorgu dili ve kaynak dili ayrı alanlardır; yeni dil eklemek = girdilere yeni anahtar eklemek.",
+"diller": [
+"tr",
+"ar",
+"en"
+],
+"kaynak_dili_varsayilan": "ar",
+"alan_kategori": {
+"fikih": [
+"18_genel_fikih",
+"19_fikhi_meseleler",
+"22_fetvalar",
+"12_fikih_kaideler",
+"11_usul_fikih",
+"16_safii",
+"17_hanbeli",
+"14_hanefi",
+"15_maliki"
+],
+"akaid": [
+"01_akaid",
+"02_firak_redler"
+],
+"tasavvuf": [
+"23_rekaik_adab",
+"01_akaid",
+"36_cevami"
+],
+"hadis": [
+"10_hadis_ilimleri",
+"08_tahric_etraf",
+"09_ilel_sual",
+"06_hadis_sunen",
+"07_hadis_serh"
+],
+"tefsir": [
+"04_kuran_ilim_usul",
+"05_tecvid_kiraat",
+"03_tefsir"
+],
+"kissa": [
+"25_tarih",
+"03_tefsir",
+"24_siyer"
+],
+"siyer": [
+"24_siyer",
+"26_teracim",
+"25_tarih"
+],
+"tarih": [
+"25_tarih",
+"26_teracim",
+"27_ensab",
+"28_buldan"
+]
+},
+"girdiler": [
+{
+"id": "abdest",
+"alan": "fikih",
+"tr": [
+"abdest"
+],
+"ar": [
+"الوضوء",
+"وضوء"
+],
+"en": [
+"wudu",
+"ablution"
+],
+"w": 1.0
+},
+{
+"id": "abdest_bozan",
+"alan": "fikih",
+"tr": [
+"abdesti boz",
+"abdest boz",
+"abdestin boz",
+"abdesti kaldır",
+"abdestsiz"
+],
+"ar": [
+"نواقض الوضوء",
+"ما ينقض الوضوء",
+"ينقض الوضوء",
+"مبطلات الوضوء"
+],
+"en": [
+"nullifiers of wudu",
+"what breaks wudu"
+],
+"w": 1.6
+},
+{
+"id": "abdest_farz",
+"alan": "fikih",
+"tr": [
+"abdestin farz",
+"abdestin şart",
+"abdestin rükn",
+"abdest nasıl"
+],
+"ar": [
+"فرائض الوضوء",
+"أركان الوضوء",
+"سنن الوضوء",
+"صفة الوضوء"
+],
+"en": [
+"obligations of wudu"
+],
+"w": 1.5
+},
+{
+"id": "gusul",
+"alan": "fikih",
+"tr": [
+"gusül",
+"gusul",
+"boy abdest"
+],
+"ar": [
+"الغسل",
+"غسل الجنابة",
+"موجبات الغسل"
+],
+"en": [
+"ghusl",
+"major ablution"
+],
+"w": 1.0
+},
+{
+"id": "cunup",
+"alan": "fikih",
+"tr": [
+"cünüp",
+"cünüplük",
+"cinabet"
+],
+"ar": [
+"الجنابة",
+"الجنب",
+"ما يحرم على الجنب"
+],
+"en": [
+"janaba",
+"major impurity"
+],
+"w": 1.0
+},
+{
+"id": "teyemmum",
+"alan": "fikih",
+"tr": [
+"teyemmüm",
+"teyemmum"
+],
+"ar": [
+"التيمم",
+"صفة التيمم",
+"شروط التيمم"
+],
+"en": [
+"tayammum",
+"dry ablution"
+],
+"w": 1.0
+},
+{
+"id": "hayiz",
+"alan": "fikih",
+"tr": [
+"hayız",
+"adet hali",
+"adetli",
+"regl"
+],
+"ar": [
+"الحيض",
+"أحكام الحيض"
+],
+"en": [
+"menstruation",
+"haid"
+],
+"w": 1.0
+},
+{
+"id": "nifas",
+"alan": "fikih",
+"tr": [
+"nifas",
+"lohusa"
+],
+"ar": [
+"النفاس"
+],
+"en": [
+"postpartum bleeding"
+],
+"w": 1.0
+},
+{
+"id": "taharet",
+"alan": "fikih",
+"tr": [
+"taharet",
+"temizlik",
+"necaset",
+"pislik",
+"necis"
+],
+"ar": [
+"الطهارة",
+"النجاسة",
+"إزالة النجاسة"
+],
+"en": [
+"purification",
+"ritual purity"
+],
+"w": 1.0
+},
+{
+"id": "istinca",
+"alan": "fikih",
+"tr": [
+"istinca",
+"tuvalet adab"
+],
+"ar": [
+"الاستنجاء",
+"آداب قضاء الحاجة"
+],
+"en": [
+"istinja"
+],
+"w": 1.0
+},
+{
+"id": "mesh",
+"alan": "fikih",
+"tr": [
+"mest üzerine mesh",
+"mestlere mesh",
+"mesh",
+"sarık üzerine"
+],
+"ar": [
+"المسح على الخفين",
+"المسح على الجبيرة"
+],
+"en": [
+"wiping over socks"
+],
+"w": 1.0
+},
+{
+"id": "namaz",
+"alan": "fikih",
+"tr": [
+"namaz",
+"salât",
+"salat"
+],
+"ar": [
+"الصلاة",
+"صلاة"
+],
+"en": [
+"salah",
+"prayer"
+],
+"w": 1.0
+},
+{
+"id": "namaz_sart",
+"alan": "fikih",
+"tr": [
+"namazın şart",
+"namaz şart",
+"namazın sıhhat"
+],
+"ar": [
+"شروط الصلاة",
+"شروط صحة الصلاة"
+],
+"en": [
+"conditions of prayer"
+],
+"w": 1.6
+},
+{
+"id": "namaz_farz",
+"alan": "fikih",
+"tr": [
+"namazın farz",
+"namazın rükn",
+"namazın rükün",
+"namaz rükün",
+"namazın ruknu"
+],
+"ar": [
+"فرائض الصلاة",
+"أركان الصلاة",
+"واجبات الصلاة"
+],
+"en": [
+"pillars of prayer"
+],
+"w": 1.5
+},
+{
+"id": "namaz_bozan",
+"alan": "fikih",
+"tr": [
+"namazı boz",
+"namaz boz",
+"namazı bozan",
+"namazın bozul"
+],
+"ar": [
+"مبطلات الصلاة",
+"ما يبطل الصلاة",
+"مفسدات الصلاة",
+"نواقض الصلاة"
+],
+"en": [
+"invalidators of prayer"
+],
+"w": 1.6
+},
+{
+"id": "namaz_vakit",
+"alan": "fikih",
+"tr": [
+"namaz vakit",
+"namaz vakti",
+"namazın vakit",
+"vakitleri",
+"beş vakit"
+],
+"ar": [
+"مواقيت الصلاة",
+"أوقات الصلاة",
+"الصلوات الخمس"
+],
+"en": [
+"prayer times"
+],
+"w": 1.4
+},
+{
+"id": "rekat",
+"alan": "fikih",
+"tr": [
+"rekât",
+"rekat",
+"kaç rekat"
+],
+"ar": [
+"ركعة",
+"عدد الركعات",
+"الركعات"
+],
+"en": [
+"rakah"
+],
+"w": 1.0
+},
+{
+"id": "sunnet_namaz",
+"alan": "fikih",
+"tr": [
+"sünnet namaz",
+"revâtib",
+"revatib",
+"müekked sünnet"
+],
+"ar": [
+"السنن الرواتب",
+"السنة المؤكدة"
+],
+"en": [
+"sunnah prayers"
+],
+"w": 1.0
+},
+{
+"id": "cuma",
+"alan": "fikih",
+"tr": [
+"cuma",
+"cumâ"
+],
+"ar": [
+"صلاة الجمعة",
+"الجمعة",
+"شروط الجمعة"
+],
+"en": [
+"friday prayer",
+"jumuah"
+],
+"w": 1.0
+},
+{
+"id": "hutbe",
+"alan": "fikih",
+"tr": [
+"hutbe"
+],
+"ar": [
+"الخطبة",
+"خطبة الجمعة"
+],
+"en": [
+"sermon",
+"khutbah"
+],
+"w": 1.0
+},
+{
+"id": "cemaat_namazi",
+"alan": "fikih",
+"tr": [
+"cemaatle namaz",
+"cemaat",
+"cemaatle"
+],
+"ar": [
+"صلاة الجماعة",
+"الجماعة",
+"أحكام الإمامة"
+],
+"en": [
+"congregational prayer"
+],
+"w": 1.0
+},
+{
+"id": "teravih",
+"alan": "fikih",
+"tr": [
+"teravih"
+],
+"ar": [
+"صلاة التراويح",
+"التراويح",
+"قيام رمضان"
+],
+"en": [
+"tarawih"
+],
+"w": 1.0
+},
+{
+"id": "vitir",
+"alan": "fikih",
+"tr": [
+"vitir",
+"vitr"
+],
+"ar": [
+"صلاة الوتر",
+"الوتر",
+"الوتر واجب"
+],
+"en": [
+"witr"
+],
+"w": 1.0
+},
+{
+"id": "bayram_namazi",
+"alan": "fikih",
+"tr": [
+"bayram namaz",
+"bayram namazı"
+],
+"ar": [
+"صلاة العيدين",
+"صلاة العيد",
+"التكبيرات"
+],
+"en": [
+"eid prayer"
+],
+"w": 1.0
+},
+{
+"id": "cenaze",
+"alan": "fikih",
+"tr": [
+"cenaze",
+"cenâze",
+"ölü yıka",
+"kefen"
+],
+"ar": [
+"صلاة الجنازة",
+"الجنازة",
+"غسل الميت",
+"تكفين الميت"
+],
+"en": [
+"funeral prayer"
+],
+"w": 1.0
+},
+{
+"id": "sehiv",
+"alan": "fikih",
+"tr": [
+"sehiv",
+"sehv",
+"secde-i sehv"
+],
+"ar": [
+"سجود السهو",
+"أحكام السهو"
+],
+"en": [
+"prostration of forgetfulness"
+],
+"w": 1.0
+},
+{
+"id": "tilavet_secdesi",
+"alan": "fikih",
+"tr": [
+"tilâvet",
+"tilavet secde"
+],
+"ar": [
+"سجود التلاوة"
+],
+"en": [
+"prostration of recitation"
+],
+"w": 1.0
+},
+{
+"id": "yolcu_namazi",
+"alan": "fikih",
+"tr": [
+"seferî",
+"yolcu namaz",
+"kasr",
+"yolcu ve namaz",
+"yolculukta namaz"
+],
+"ar": [
+"صلاة المسافر",
+"القصر",
+"الجمع بين الصلاتين"
+],
+"en": [
+"travelers prayer",
+"shortening prayer"
+],
+"w": 1.0
+},
+{
+"id": "kaza_namaz",
+"alan": "fikih",
+"tr": [
+"kaza namaz",
+"namaz borcu",
+"kazaya kalmış"
+],
+"ar": [
+"قضاء الصلاة",
+"قضاء الفوائت"
+],
+"en": [
+"making up missed prayers"
+],
+"w": 1.0
+},
+{
+"id": "ezan",
+"alan": "fikih",
+"tr": [
+"ezan",
+"ikamet",
+"kâmet"
+],
+"ar": [
+"الأذان",
+"الإقامة"
+],
+"en": [
+"adhan",
+"call to prayer"
+],
+"w": 1.0
+},
+{
+"id": "kible",
+"alan": "fikih",
+"tr": [
+"kıble",
+"kible"
+],
+"ar": [
+"القبلة",
+"استقبال القبلة"
+],
+"en": [
+"qibla"
+],
+"w": 1.0
+},
+{
+"id": "avret",
+"alan": "fikih",
+"tr": [
+"avret",
+"setr-i avret",
+"setri avret"
+],
+"ar": [
+"ستر العورة",
+"العورة"
+],
+"en": [
+"awrah"
+],
+"w": 1.0
+},
+{
+"id": "oruc",
+"alan": "fikih",
+"tr": [
+"oruç",
+"oruc",
+"savm",
+"sıyam"
+],
+"ar": [
+"الصيام",
+"الصوم",
+"صوم رمضان"
+],
+"en": [
+"fasting",
+"sawm"
+],
+"w": 1.0
+},
+{
+"id": "orucu_bozan",
+"alan": "fikih",
+"tr": [
+"orucu boz",
+"oruç boz",
+"orucu bozan",
+"orucun boz",
+"orucun bozul",
+"orucu bozar"
+],
+"ar": [
+"مفسدات الصوم",
+"مبطلات الصيام",
+"ما يفسد الصوم",
+"المفطرات"
+],
+"en": [
+"what breaks the fast"
+],
+"w": 1.6
+},
+{
+"id": "oruc_ozur",
+"alan": "fikih",
+"tr": [
+"oruç tutamayan",
+"oruç tutmayabil",
+"orucu tutmayabil",
+"oruç tutma ruhsat",
+"orucu terk ruhsat",
+"oruç muaf",
+"özür"
+],
+"ar": [
+"أعذار الإفطار",
+"من يباح له الفطر",
+"الفطر في رمضان للمريض والمسافر"
+],
+"en": [
+"excuses for not fasting"
+],
+"w": 1.4
+},
+{
+"id": "ramazan",
+"alan": "fikih",
+"tr": [
+"ramazan"
+],
+"ar": [
+"رمضان",
+"شهر رمضان"
+],
+"en": [
+"ramadan"
+],
+"w": 1.0
+},
+{
+"id": "fidye",
+"alan": "fikih",
+"tr": [
+"fidye"
+],
+"ar": [
+"الفدية",
+"فدية الصيام"
+],
+"en": [
+"fidya"
+],
+"w": 1.0
+},
+{
+"id": "kefaret",
+"alan": "fikih",
+"tr": [
+"kefâret",
+"kefaret"
+],
+"ar": [
+"الكفارة",
+"كفارة الصيام",
+"كفارة اليمين"
+],
+"en": [
+"expiation",
+"kaffarah"
+],
+"w": 1.0
+},
+{
+"id": "itikaf",
+"alan": "fikih",
+"tr": [
+"itikâf",
+"itikaf"
+],
+"ar": [
+"الاعتكاف"
+],
+"en": [
+"itikaf"
+],
+"w": 1.0
+},
+{
+"id": "sahur_iftar",
+"alan": "fikih",
+"tr": [
+"sahur",
+"iftar",
+"oruç aç"
+],
+"ar": [
+"السحور",
+"الإفطار",
+"تعجيل الفطر"
+],
+"en": [
+"suhoor",
+"iftar"
+],
+"w": 1.0
+},
+{
+"id": "zekat",
+"alan": "fikih",
+"tr": [
+"zekât",
+"zekat"
+],
+"ar": [
+"الزكاة",
+"أحكام الزكاة"
+],
+"en": [
+"zakat"
+],
+"w": 1.0
+},
+{
+"id": "zekat_sarf",
+"alan": "fikih",
+"tr": [
+"zekât kimlere",
+"zekat kimlere",
+"zekâtın sarf",
+"zekâtın hak",
+"zekat verilir",
+"zekâtı kimlere",
+"zekâtın verileceği",
+"zekât verilecek"
+],
+"ar": [
+"مصارف الزكاة",
+"أصناف الزكاة",
+"الأصناف الثمانية",
+"لمن تعطى الزكاة",
+"إنما الصدقات للفقراء"
+],
+"en": [
+"recipients of zakat"
+],
+"w": 1.7
+},
+{
+"id": "nisap",
+"alan": "fikih",
+"tr": [
+"nisap",
+"nisab"
+],
+"ar": [
+"النصاب",
+"نصاب الزكاة",
+"نصاب الذهب والفضة"
+],
+"en": [
+"nisab"
+],
+"w": 1.0
+},
+{
+"id": "fitre",
+"alan": "fikih",
+"tr": [
+"fıtır",
+"fitre",
+"fitir",
+"sadaka-i fıtır"
+],
+"ar": [
+"زكاة الفطر",
+"صدقة الفطر"
+],
+"en": [
+"zakat al-fitr"
+],
+"w": 1.0
+},
+{
+"id": "sadaka",
+"alan": "fikih",
+"tr": [
+"sadaka",
+"infak"
+],
+"ar": [
+"الصدقة",
+"الصدقات",
+"الإنفاق"
+],
+"en": [
+"charity",
+"sadaqah"
+],
+"w": 1.0
+},
+{
+"id": "hac",
+"alan": "fikih",
+"tr": [
+"hac",
+"haccın",
+"haccı",
+"hacc"
+],
+"ar": [
+"الحج",
+"أحكام الحج",
+"مناسك الحج"
+],
+"en": [
+"hajj",
+"pilgrimage"
+],
+"w": 1.0
+},
+{
+"id": "hac_farz",
+"alan": "fikih",
+"tr": [
+"haccın farz",
+"hac farz",
+"haccın rükn",
+"haccın şart",
+"haccın vacip"
+],
+"ar": [
+"فرائض الحج",
+"أركان الحج",
+"واجبات الحج",
+"شروط الحج"
+],
+"en": [
+"pillars of hajj"
+],
+"w": 1.6
+},
+{
+"id": "umre",
+"alan": "fikih",
+"tr": [
+"umre"
+],
+"ar": [
+"العمرة",
+"أحكام العمرة"
+],
+"en": [
+"umrah"
+],
+"w": 1.0
+},
+{
+"id": "hac_umre_fark",
+"alan": "fikih",
+"tr": [
+"hac ile umre",
+"hac ve umre",
+"umre ile hac",
+"hac umre fark"
+],
+"ar": [
+"الفرق بين الحج والعمرة"
+],
+"en": [
+"difference between hajj and umrah"
+],
+"w": 1.5
+},
+{
+"id": "ihram",
+"alan": "fikih",
+"tr": [
+"ihram"
+],
+"ar": [
+"الإحرام",
+"محظورات الإحرام"
+],
+"en": [
+"ihram"
+],
+"w": 1.0
+},
+{
+"id": "tavaf",
+"alan": "fikih",
+"tr": [
+"tavaf"
+],
+"ar": [
+"الطواف",
+"طواف الإفاضة"
+],
+"en": [
+"tawaf"
+],
+"w": 1.0
+},
+{
+"id": "arafat",
+"alan": "fikih",
+"tr": [
+"arafat",
+"vakfe",
+"vukuf"
+],
+"ar": [
+"الوقوف بعرفة",
+"عرفة"
+],
+"en": [
+"standing at arafah"
+],
+"w": 1.0
+},
+{
+"id": "kurban",
+"alan": "fikih",
+"tr": [
+"kurban"
+],
+"ar": [
+"الأضحية",
+"الأضاحي",
+"أحكام الأضحية"
+],
+"en": [
+"udhiyah",
+"sacrifice"
+],
+"w": 1.0
+},
+{
+"id": "akika",
+"alan": "fikih",
+"tr": [
+"akika"
+],
+"ar": [
+"العقيقة"
+],
+"en": [
+"aqiqah"
+],
+"w": 1.0
+},
+{
+"id": "nikah",
+"alan": "fikih",
+"tr": [
+"nikâh",
+"nikah",
+"nikahın"
+],
+"ar": [
+"النكاح",
+"الزواج",
+"شروط النكاح",
+"أركان النكاح"
+],
+"en": [
+"marriage",
+"nikah"
+],
+"w": 1.0
+},
+{
+"id": "nikah_sart",
+"alan": "fikih",
+"tr": [
+"nikâhın şart",
+"nikahın şart",
+"nikâh şart",
+"nikahın sahih",
+"nikâhın sahih",
+"nikâhın rükn",
+"nikah akdi",
+"nikâh akdi",
+"evlenmenin şart"
+],
+"ar": [
+"شروط النكاح",
+"أركان النكاح",
+"الشهود في النكاح",
+"الولي في النكاح"
+],
+"en": [
+"conditions of marriage contract"
+],
+"w": 1.9
+},
+{
+"id": "mehir",
+"alan": "fikih",
+"tr": [
+"mehir"
+],
+"ar": [
+"المهر",
+"الصداق"
+],
+"en": [
+"mahr",
+"dowry"
+],
+"w": 1.0
+},
+{
+"id": "talak",
+"alan": "fikih",
+"tr": [
+"talak",
+"talâk",
+"boşanma çeşit",
+"talak çeşit",
+"talak ve boşan",
+"talâk-ı bâin",
+"talak-ı ric'î"
+],
+"ar": [
+"الطلاق",
+"أنواع الطلاق",
+"الطلاق السني والبدعي"
+],
+"en": [
+"divorce",
+"talaq"
+],
+"w": 1.0
+},
+{
+"id": "iddet",
+"alan": "fikih",
+"tr": [
+"iddet"
+],
+"ar": [
+"العدة",
+"عدة المطلقة"
+],
+"en": [
+"iddah"
+],
+"w": 1.0
+},
+{
+"id": "nafaka",
+"alan": "fikih",
+"tr": [
+"nafaka"
+],
+"ar": [
+"النفقة"
+],
+"en": [
+"maintenance"
+],
+"w": 1.0
+},
+{
+"id": "miras",
+"alan": "fikih",
+"tr": [
+"miras",
+"ferâiz",
+"feraiz",
+"mirasçı"
+],
+"ar": [
+"الميراث",
+"الفرائض",
+"المواريث"
+],
+"en": [
+"inheritance"
+],
+"w": 0.8
+},
+{
+"id": "vasiyet",
+"alan": "fikih",
+"tr": [
+"vasiyet"
+],
+"ar": [
+"الوصية"
+],
+"en": [
+"bequest"
+],
+"w": 0.8
+},
+{
+"id": "vakif",
+"alan": "fikih",
+"tr": [
+"vakıf",
+"vakif"
+],
+"ar": [
+"الوقف"
+],
+"en": [
+"waqf",
+"endowment"
+],
+"w": 0.8
+},
+{
+"id": "alisveris",
+"alan": "fikih",
+"tr": [
+"alışveriş",
+"alisveris",
+"satış akdi",
+"ticaret"
+],
+"ar": [
+"البيع",
+"البيوع",
+"أحكام البيع"
+],
+"en": [
+"sales contract"
+],
+"w": 0.7
+},
+{
+"id": "faiz",
+"alan": "fikih",
+"tr": [
+"faiz"
+],
+"ar": [
+"الربا",
+"تحريم الربا",
+"أنواع الربا"
+],
+"en": [
+"riba",
+"usury",
+"interest"
+],
+"w": 0.7
+},
+{
+"id": "kira",
+"alan": "fikih",
+"tr": [
+"kira",
+"icâre",
+"icare"
+],
+"ar": [
+"الإجارة"
+],
+"en": [
+"lease",
+"ijarah"
+],
+"w": 0.6
+},
+{
+"id": "ortaklik",
+"alan": "fikih",
+"tr": [
+"ortaklık",
+"şirket akdi",
+"mudârebe",
+"muzaraa"
+],
+"ar": [
+"الشركة",
+"المضاربة"
+],
+"en": [
+"partnership"
+],
+"w": 0.7
+},
+{
+"id": "rehin_kefalet",
+"alan": "fikih",
+"tr": [
+"rehin",
+"kefâlet",
+"kefalet",
+"havale"
+],
+"ar": [
+"الرهن",
+"الكفالة",
+"الحوالة"
+],
+"en": [
+"pledge",
+"surety"
+],
+"w": 0.7
+},
+{
+"id": "borc",
+"alan": "fikih",
+"tr": [
+"borç",
+"ödünç",
+"karz"
+],
+"ar": [
+"الدين",
+"القرض"
+],
+"en": [
+"debt",
+"loan"
+],
+"w": 0.6
+},
+{
+"id": "yemin",
+"alan": "fikih",
+"tr": [
+"yemin",
+"yeminin"
+],
+"ar": [
+"اليمين",
+"الأيمان",
+"كفارة اليمين"
+],
+"en": [
+"oath"
+],
+"w": 0.8
+},
+{
+"id": "nezir",
+"alan": "fikih",
+"tr": [
+"nezir",
+"adak"
+],
+"ar": [
+"النذر"
+],
+"en": [
+"vow"
+],
+"w": 0.9
+},
+{
+"id": "zebih",
+"alan": "fikih",
+"tr": [
+"kesim",
+"boğazlama",
+"zebih",
+"avlanma",
+"av hayvan"
+],
+"ar": [
+"الذبائح",
+"الذكاة",
+"الصيد"
+],
+"en": [
+"slaughter",
+"halal meat"
+],
+"w": 1.0
+},
+{
+"id": "helal_haram",
+"alan": "fikih",
+"tr": [
+"helal ve haram",
+"helâl",
+"haram yiyecek",
+"içki",
+"şarap"
+],
+"ar": [
+"الحلال والحرام",
+"الأطعمة والأشربة",
+"الخمر"
+],
+"en": [
+"halal and haram",
+"wine"
+],
+"w": 1.0
+},
+{
+"id": "hadler",
+"alan": "fikih",
+"tr": [
+"had cezası",
+"hudûd",
+"hudud",
+"kısas",
+"diyet",
+"zina",
+"hırsızlık cezası"
+],
+"ar": [
+"الحدود",
+"القصاص",
+"الدية"
+],
+"en": [
+"hudud",
+"retribution"
+],
+"w": 0.8
+},
+{
+"id": "cihad",
+"alan": "fikih",
+"tr": [
+"cihad",
+"cihâd",
+"gaza",
+"esir"
+],
+"ar": [
+"الجهاد",
+"أحكام الجهاد",
+"الأسرى"
+],
+"en": [
+"jihad"
+],
+"w": 1.0
+},
+{
+"id": "irtidat",
+"alan": "fikih",
+"tr": [
+"mürted",
+"irtidad",
+"dinden dön"
+],
+"ar": [
+"الردة",
+"المرتد"
+],
+"en": [
+"apostasy"
+],
+"w": 1.0
+},
+{
+"id": "farz_vacip_fark",
+"alan": "fikih",
+"tr": [
+"farz ile vâcip",
+"farz ile vacip",
+"farz ve vâcip",
+"farz ve vacip",
+"farz vacip",
+"vâcip ile farz",
+"vacip ile farz"
+],
+"ar": [
+"الفرق بين الفرض والواجب",
+"الفرض والواجب عند الحنفية"
+],
+"en": [
+"difference between fard and wajib"
+],
+"w": 1.7
+},
+{
+"id": "farz",
+"alan": "fikih",
+"tr": [
+"farz",
+"fard"
+],
+"ar": [
+"الفرض",
+"الفريضة"
+],
+"en": [
+"obligatory",
+"fard"
+],
+"w": 1.0
+},
+{
+"id": "vacip",
+"alan": "fikih",
+"tr": [
+"vâcip",
+"vacip"
+],
+"ar": [
+"الواجب"
+],
+"en": [
+"wajib"
+],
+"w": 1.0
+},
+{
+"id": "hukum_cesitleri",
+"alan": "fikih",
+"tr": [
+"müstehap",
+"mendup",
+"mubah",
+"mekruh",
+"haram",
+"tahrimen",
+"tenzihen"
+],
+"ar": [
+"المندوب",
+"المستحب",
+"المباح",
+"المكروه",
+"الحرام",
+"الأحكام التكليفية"
+],
+"en": [
+"recommended",
+"permissible",
+"disliked"
+],
+"w": 1.0
+},
+{
+"id": "hanefi",
+"alan": "fikih",
+"tr": [
+"hanefî",
+"hanefi",
+"ebû hanîfe",
+"ebu hanife",
+"imam azam"
+],
+"ar": [
+"الحنفية",
+"مذهب الحنفية",
+"أبو حنيفة"
+],
+"en": [
+"hanafi"
+],
+"w": 1.0
+},
+{
+"id": "safii",
+"alan": "fikih",
+"tr": [
+"şâfiî",
+"safii",
+"şafii",
+"imam şafii"
+],
+"ar": [
+"الشافعية",
+"مذهب الشافعي",
+"الإمام الشافعي"
+],
+"en": [
+"shafii"
+],
+"w": 1.2
+},
+{
+"id": "maliki",
+"alan": "fikih",
+"tr": [
+"mâlikî",
+"maliki",
+"imam mâlik",
+"imam malik"
+],
+"ar": [
+"المالكية",
+"مذهب مالك",
+"الإمام مالك"
+],
+"en": [
+"maliki"
+],
+"w": 1.2
+},
+{
+"id": "hanbeli",
+"alan": "fikih",
+"tr": [
+"hanbelî",
+"hanbeli",
+"ahmed b. hanbel",
+"ahmed bin hanbel"
+],
+"ar": [
+"الحنابلة",
+"مذهب أحمد",
+"أحمد بن حنبل"
+],
+"en": [
+"hanbali"
+],
+"w": 1.2
+},
+{
+"id": "dort_mezhep",
+"alan": "fikih",
+"tr": [
+"dört mezhep",
+"fıkıh mezhep",
+"sünnî mezhep",
+"sünni fıkıh mezhep",
+"mezhepler"
+],
+"ar": [
+"المذاهب الأربعة",
+"المذاهب الفقهية",
+"المذاهب السنية"
+],
+"en": [
+"four schools of law"
+],
+"w": 1.6
+},
+{
+"id": "ictihad",
+"alan": "fikih",
+"tr": [
+"içtihad",
+"ictihad",
+"müctehid",
+"taklid"
+],
+"ar": [
+"الاجتهاد",
+"المجتهد",
+"التقليد"
+],
+"en": [
+"ijtihad",
+"taqlid"
+],
+"w": 1.0
+},
+{
+"id": "fetva",
+"alan": "fikih",
+"tr": [
+"fetva",
+"müftî",
+"mufti"
+],
+"ar": [
+"الفتوى",
+"المفتي"
+],
+"en": [
+"fatwa"
+],
+"w": 1.0
+},
+{
+"id": "kiyas",
+"alan": "fikih",
+"tr": [
+"kıyas",
+"kiyas"
+],
+"ar": [
+"القياس",
+"الأصول"
+],
+"en": [
+"analogy",
+"qiyas"
+],
+"w": 1.0
+},
+{
+"id": "icma",
+"alan": "fikih",
+"tr": [
+"icmâ",
+"icma",
+"icmâ-yı ümmet"
+],
+"ar": [
+"الإجماع"
+],
+"en": [
+"consensus",
+"ijma"
+],
+"w": 1.0
+},
+{
+"id": "usul_fikih",
+"alan": "fikih",
+"tr": [
+"usûl-i fıkıh",
+"usul-i fikih",
+"fıkıh usûl",
+"usul fikih",
+"fıkıh usulü"
+],
+"ar": [
+"أصول الفقه",
+"علم أصول الفقه",
+"الأدلة الشرعية"
+],
+"en": [
+"principles of jurisprudence"
+],
+"w": 1.4
+},
+{
+"id": "istihsan_maslahat",
+"alan": "fikih",
+"tr": [
+"istihsan",
+"maslahat",
+"mesâlih-i mürsele",
+"örf",
+"mukâsıd",
+"makasid",
+"şeriatın maksat"
+],
+"ar": [
+"الاستحسان",
+"المصلحة",
+"المصالح المرسلة",
+"العرف",
+"مقاصد الشريعة"
+],
+"en": [
+"maqasid",
+"public interest"
+],
+"w": 1.0
+},
+{
+"id": "fikih",
+"alan": "fikih",
+"tr": [
+"fıkıh",
+"fikih",
+"fakih",
+"fıkhî"
+],
+"ar": [
+"الفقه",
+"الفقه الإسلامي",
+"الفقهاء"
+],
+"en": [
+"fiqh",
+"jurisprudence"
+],
+"w": 0.8
+},
+{
+"id": "ehl_sunnet",
+"alan": "akaid",
+"tr": [
+"ehl-i sünnet",
+"ehli sünnet",
+"ehl-i sunnet",
+"sünnî",
+"sünni",
+"ehl-i sünnet ve'l-cemaat",
+"ehl-i sünnet vel cemaat",
+"ehlüssünnet"
+],
+"ar": [
+"أهل السنة والجماعة",
+"أهل السنة",
+"الفرقة الناجية"
+],
+"en": [
+"ahl al-sunnah wal-jamaah",
+"sunni orthodoxy"
+],
+"w": 1.6
+},
+{
+"id": "esari",
+"alan": "akaid",
+"tr": [
+"eş'arî",
+"eşarî",
+"eşari",
+"eş'ari",
+"ebu'l-hasan el-eş'arî",
+"eş’arî",
+"eş'âri",
+"eşariyye",
+"eşâire"
+],
+"ar": [
+"الأشعري",
+"الأشاعرة",
+"أبو الحسن الأشعري",
+"الأشعرية"
+],
+"en": [
+"ashari",
+"ashari school"
+],
+"w": 1.5
+},
+{
+"id": "maturidi",
+"alan": "akaid",
+"tr": [
+"mâtürîdî",
+"maturidi",
+"mâtürîdiyye",
+"maturidiyye",
+"ebu mansur",
+"matüridi",
+"mâtürîdî"
+],
+"ar": [
+"الماتريدي",
+"الماتريدية",
+"أبو منصور الماتريدي"
+],
+"en": [
+"maturidi",
+"maturidi school"
+],
+"w": 1.5
+},
+{
+"id": "esari_maturidi",
+"alan": "akaid",
+"tr": [
+"eş'arî ve mâtürîdî",
+"eşari ve maturidi",
+"eş'arî ile mâtürîdî",
+"eşarîlik ve mâtürîdîlik",
+"eş'arî mâtürîdî"
+],
+"ar": [
+"الأشعرية والماتريدية",
+"الفرق بين الأشاعرة والماتريدية",
+"المسائل الخلافية بين الأشاعرة والماتريدية"
+],
+"en": [
+"ashari and maturidi"
+],
+"w": 1.7
+},
+{
+"id": "sifatlar",
+"alan": "akaid",
+"tr": [
+"allah'ın sıfat",
+"allahın sıfat",
+"sıfâtullah",
+"sıfât-ı ilâhiyye",
+"sıfat-ı ilahiyye",
+"ilâhî sıfat",
+"ilahi sifat",
+"allah'ın zâtî",
+"allah'ın subuti"
+],
+"ar": [
+"صفات الله",
+"الصفات الإلهية",
+"صفات الله تعالى"
+],
+"en": [
+"attributes of god",
+"divine attributes"
+],
+"w": 1.4
+},
+{
+"id": "zati_subuti",
+"alan": "akaid",
+"tr": [
+"zâtî",
+"zati",
+"sübûtî",
+"subuti",
+"sübût",
+"sıfât-ı zâtiyye",
+"sıfat-ı subutiyye",
+"mânâ sıfat"
+],
+"ar": [
+"الصفات الذاتية",
+"الصفات الثبوتية",
+"صفات المعاني",
+"صفات المعنى",
+"الصفات الفعلية"
+],
+"en": [
+"essential attributes",
+"affirmative attributes"
+],
+"w": 1.6
+},
+{
+"id": "selbi_sifat",
+"alan": "akaid",
+"tr": [
+"selbî sıfat",
+"selbi sifat",
+"selbî",
+"selbi",
+"selbiyye",
+"sıfât-ı selbiyye",
+"sıfat-ı selbiyye",
+"kıdem ve beka",
+"kıdem sıfat",
+"muhâlefetün li'l-havâdis",
+"muhalefet",
+"vahdâniyet sıfat"
+],
+"ar": [
+"الصفات السلبية",
+"صفات التنزيه",
+"القدم والبقاء",
+"المخالفة للحوادث",
+"الوحدانية"
+],
+"en": [
+"negative attributes"
+],
+"w": 1.6
+},
+{
+"id": "tevhid",
+"alan": "akaid",
+"tr": [
+"tevhid",
+"tevhîd",
+"vahdâniyet",
+"vahdaniyet",
+"allah'ın birliği",
+"allahın birliği",
+"bir olması",
+"tek olması"
+],
+"ar": [
+"التوحيد",
+"توحيد الله",
+"الوحدانية",
+"لا إله إلا الله"
+],
+"en": [
+"monotheism",
+"tawhid",
+"oneness of god"
+],
+"w": 1.2
+},
+{
+"id": "esma_husna",
+"alan": "akaid",
+"tr": [
+"esmâ-i hüsnâ",
+"esma-i hüsna",
+"esmâül hüsnâ",
+"güzel isimler",
+"doksan dokuz isim",
+"allah'ın isimleri"
+],
+"ar": [
+"أسماء الله الحسنى",
+"الأسماء الحسنى",
+"أسماء الله وصفاته"
+],
+"en": [
+"names of god",
+"99 names"
+],
+"w": 1.4
+},
+{
+"id": "kader",
+"alan": "akaid",
+"tr": [
+"kader",
+"kaderi",
+"kaderin",
+"takdir-i ilâhî",
+"takdir"
+],
+"ar": [
+"القدر",
+"القضاء والقدر",
+"الإيمان بالقدر"
+],
+"en": [
+"predestination",
+"divine decree",
+"qadar"
+],
+"w": 1.2
+},
+{
+"id": "kaza_kader",
+"alan": "akaid",
+"tr": [
+"kaza ve kader",
+"kaza ile kader",
+"kazâ ile kader",
+"kader ve kaza",
+"kader ile kaza",
+"kaza kader"
+],
+"ar": [
+"القضاء والقدر",
+"الفرق بين القضاء والقدر"
+],
+"en": [
+"qada and qadar"
+],
+"w": 1.6
+},
+{
+"id": "kesb",
+"alan": "akaid",
+"tr": [
+"kesb",
+"kesp",
+"cüz'î irade",
+"cüzi irade",
+"irade-i cüz'iyye",
+"insan iradesi",
+"insanın iradesi",
+"irade ve kader"
+],
+"ar": [
+"الكسب",
+"نظرية الكسب",
+"الإرادة الجزئية",
+"الاختيار والقدرة",
+"أفعال العباد"
+],
+"en": [
+"acquisition",
+"kasb",
+"free will"
+],
+"w": 1.5
+},
+{
+"id": "cebr",
+"alan": "akaid",
+"tr": [
+"cebriyye",
+"cebir",
+"cebriye",
+"cebrî"
+],
+"ar": [
+"الجبرية",
+"الجبر",
+"مذهب الجبر"
+],
+"en": [
+"jabriyya",
+"determinism"
+],
+"w": 1.0
+},
+{
+"id": "kaderiyye",
+"alan": "akaid",
+"tr": [
+"kaderiyye",
+"kaderiye",
+"kaderî"
+],
+"ar": [
+"القدرية",
+"القدرية والمعتزلة"
+],
+"en": [
+"qadariyya"
+],
+"w": 1.0
+},
+{
+"id": "mutezile",
+"alan": "akaid",
+"tr": [
+"mu'tezile",
+"mutezile",
+"mu’tezile",
+"mutezilî",
+"mu'tezilî"
+],
+"ar": [
+"المعتزلة",
+"مذهب المعتزلة",
+"الأصول الخمسة",
+"واصل بن عطاء"
+],
+"en": [
+"mutazila",
+"mutazilites"
+],
+"w": 1.4
+},
+{
+"id": "hariciler",
+"alan": "akaid",
+"tr": [
+"hâricî",
+"harici",
+"hâriciler",
+"hariciler",
+"haricîler",
+"haricilik"
+],
+"ar": [
+"الخوارج",
+"الحرورية",
+"فرقة الخوارج"
+],
+"en": [
+"kharijites"
+],
+"w": 1.4
+},
+{
+"id": "murcie",
+"alan": "akaid",
+"tr": [
+"mürcie",
+"mürciî"
+],
+"ar": [
+"المرجئة",
+"الإرجاء"
+],
+"en": [
+"murjiah"
+],
+"w": 1.0
+},
+{
+"id": "sia",
+"alan": "akaid",
+"tr": [
+"şîa",
+"şia",
+"şii",
+"şiî",
+"imâmiyye",
+"rafıza",
+"râfıza"
+],
+"ar": [
+"الشيعة",
+"الرافضة",
+"الإمامية",
+"الإسماعيلية"
+],
+"en": [
+"shia",
+"shiites"
+],
+"w": 1.0
+},
+{
+"id": "cehmiyye",
+"alan": "akaid",
+"tr": [
+"cehmiyye",
+"cehm b. safvan"
+],
+"ar": [
+"الجهمية",
+"جهم بن صفوان"
+],
+"en": [
+"jahmiyya"
+],
+"w": 1.0
+},
+{
+"id": "ruyetullah",
+"alan": "akaid",
+"tr": [
+"rü'yetullah",
+"ru'yetullah",
+"ruyetullah",
+"allah'ın görül",
+"allah görül",
+"allah'ı görme",
+"allahın görül",
+"allah'ın gör",
+"cennette allah",
+"ahirette allah"
+],
+"ar": [
+"رؤية الله",
+"رؤية الله تعالى في الآخرة",
+"الرؤية",
+"رؤية المؤمنين ربهم"
+],
+"en": [
+"seeing god",
+"vision of god in the hereafter"
+],
+"w": 1.7
+},
+{
+"id": "ahiret",
+"alan": "akaid",
+"tr": [
+"âhiret",
+"ahiret",
+"ahirete iman",
+"ahiret inanc",
+"ahiret hayat"
+],
+"ar": [
+"الآخرة",
+"اليوم الآخر",
+"الإيمان باليوم الآخر"
+],
+"en": [
+"hereafter",
+"afterlife"
+],
+"w": 1.2
+},
+{
+"id": "kabir",
+"alan": "akaid",
+"tr": [
+"kabir azab",
+"kabir hayat",
+"kabir hayatı",
+"kabir suâl",
+"kabirde",
+"kabir",
+"münker nekir",
+"münker ve nekir"
+],
+"ar": [
+"عذاب القبر",
+"نعيم القبر",
+"فتنة القبر",
+"منكر ونكير",
+"سؤال القبر"
+],
+"en": [
+"grave punishment",
+"life in the grave"
+],
+"w": 1.4
+},
+{
+"id": "berzah",
+"alan": "akaid",
+"tr": [
+"berzah",
+"âlem-i berzah"
+],
+"ar": [
+"البرزخ",
+"عالم البرزخ"
+],
+"en": [
+"barzakh"
+],
+"w": 1.0
+},
+{
+"id": "bas_hasir",
+"alan": "akaid",
+"tr": [
+"ba's",
+"ba’s",
+"bas ba'dël mevt",
+"diriliş",
+"dirilme",
+"haşir",
+"mahşer",
+"kıyamet günü"
+],
+"ar": [
+"البعث",
+"البعث والنشور",
+"الحشر",
+"المحشر",
+"يوم القيامة"
+],
+"en": [
+"resurrection",
+"day of judgment"
+],
+"w": 1.3
+},
+{
+"id": "sirat_mizan",
+"alan": "akaid",
+"tr": [
+"sırat",
+"sirat",
+"mizan",
+"mîzân",
+"hesap günü",
+"amel defteri"
+],
+"ar": [
+"الصراط",
+"الميزان",
+"الحساب",
+"الحوض"
+],
+"en": [
+"bridge",
+"scale",
+"reckoning"
+],
+"w": 1.0
+},
+{
+"id": "cennet_cehennem",
+"alan": "akaid",
+"tr": [
+"cennet",
+"cehennem",
+"cehennemlik",
+"cennetlik"
+],
+"ar": [
+"الجنة",
+"النار",
+"جهنم",
+"نعيم الجنة",
+"عذاب النار"
+],
+"en": [
+"paradise",
+"hell"
+],
+"w": 1.0
+},
+{
+"id": "sefaat",
+"alan": "akaid",
+"tr": [
+"şefaat",
+"şefâat",
+"şefaat eder",
+"şefaatçi"
+],
+"ar": [
+"الشفاعة",
+"شفاعة النبي",
+"الشفاعة لأهل الكبائر"
+],
+"en": [
+"intercession",
+"shafaa"
+],
+"w": 1.6
+},
+{
+"id": "ehl_kible",
+"alan": "akaid",
+"tr": [
+"ehl-i kıble",
+"ehli kıble",
+"kıble ehli",
+"ehl-i kible"
+],
+"ar": [
+"أهل القبلة",
+"لا نكفر أحدا من أهل القبلة"
+],
+"en": [
+"people of the qibla"
+],
+"w": 1.7
+},
+{
+"id": "tekfir",
+"alan": "akaid",
+"tr": [
+"tekfir",
+"tekfîr",
+"küfre nisbet",
+"kâfir say",
+"kafir say",
+"kâfir ilan"
+],
+"ar": [
+"التكفير",
+"تكفير المسلم",
+"ضوابط التكفير",
+"مسألة التكفير"
+],
+"en": [
+"takfir",
+"excommunication"
+],
+"w": 1.6
+},
+{
+"id": "kufur",
+"alan": "akaid",
+"tr": [
+"küfür",
+"kufur",
+"kâfir",
+"kafir",
+"küfrün"
+],
+"ar": [
+"الكفر",
+"الكافر",
+"أنواع الكفر"
+],
+"en": [
+"disbelief",
+"kufr"
+],
+"w": 1.0
+},
+{
+"id": "iman",
+"alan": "akaid",
+"tr": [
+"iman",
+"îmân",
+"imanın",
+"imanı"
+],
+"ar": [
+"الإيمان",
+"حقيقة الإيمان",
+"ماهية الإيمان"
+],
+"en": [
+"faith",
+"iman"
+],
+"w": 1.1
+},
+{
+"id": "iman_esaslari",
+"alan": "akaid",
+"tr": [
+"iman esas",
+"imanın şart",
+"amentü",
+"âmentü",
+"imanın altı",
+"imanın rükn",
+"iman rükn"
+],
+"ar": [
+"أركان الإيمان",
+"الإيمان بالله وملائكته وكتبه ورسله",
+"أصول الإيمان"
+],
+"en": [
+"articles of faith"
+],
+"w": 1.7
+},
+{
+"id": "islam_sartlari",
+"alan": "akaid",
+"tr": [
+"islam'ın şart",
+"islamın şart",
+"islamın beş şart",
+"islâm'ın beş şart",
+"islam şart",
+"islam'ın temel"
+],
+"ar": [
+"أركان الإسلام",
+"بني الإسلام على خمس",
+"الأركان الخمسة"
+],
+"en": [
+"pillars of islam"
+],
+"w": 1.7
+},
+{
+"id": "tasdik_ikrar",
+"alan": "akaid",
+"tr": [
+"tasdik",
+"tasdîk",
+"ikrar",
+"amel imandan",
+"imanın cüz",
+"amel iman"
+],
+"ar": [
+"التصديق",
+"الإقرار",
+"الإيمان قول وعمل",
+"الأعمال من الإيمان",
+"زيادة الإيمان ونقصانه"
+],
+"en": [
+"assent",
+"declaration",
+"deeds and faith"
+],
+"w": 1.4
+},
+{
+"id": "mucize",
+"alan": "akaid",
+"tr": [
+"mucize",
+"mu'cize",
+"mûcize",
+"mucizeler"
+],
+"ar": [
+"المعجزة",
+"المعجزات",
+"معجزات الأنبياء"
+],
+"en": [
+"miracle",
+"mujiza"
+],
+"w": 1.0
+},
+{
+"id": "keramet",
+"alan": "akaid",
+"tr": [
+"keramet",
+"kerâmet",
+"kerametler",
+"kerâmât"
+],
+"ar": [
+"الكرامة",
+"الكرامات",
+"كرامات الأولياء"
+],
+"en": [
+"karamat",
+"saintly miracle"
+],
+"w": 1.0
+},
+{
+"id": "mucize_keramet",
+"alan": "akaid",
+"tr": [
+"mucize ile keramet",
+"mucize ve keramet",
+"keramet ile mucize",
+"mucize keramet",
+"mu'cize ile kerâmet"
+],
+"ar": [
+"الفرق بين المعجزة والكرامة",
+"المعجزة والكرامة",
+"الفرق بين المعجزة والكرامة والسحر"
+],
+"en": [
+"miracle and karamat difference"
+],
+"w": 1.8
+},
+{
+"id": "nubuvvet",
+"alan": "akaid",
+"tr": [
+"nübüvvet",
+"peygamberlik",
+"peygamberlerin",
+"nebî ile resul",
+"nebi ve resul",
+"resul ile nebi"
+],
+"ar": [
+"النبوة",
+"النبي والرسول",
+"الفرق بين النبي والرسول",
+"الأنبياء والرسل"
+],
+"en": [
+"prophethood"
+],
+"w": 1.2
+},
+{
+"id": "ismet",
+"alan": "akaid",
+"tr": [
+"ismet",
+"ismet sıfat",
+"peygamberlerin masum"
+],
+"ar": [
+"العصمة",
+"عصمة الأنبياء"
+],
+"en": [
+"infallibility of prophets"
+],
+"w": 1.0
+},
+{
+"id": "melek",
+"alan": "akaid",
+"tr": [
+"melek",
+"melâike",
+"melekler",
+"cebrâil",
+"cibril",
+"cebrail"
+],
+"ar": [
+"الملائكة",
+"الإيمان بالملائكة",
+"جبريل"
+],
+"en": [
+"angels"
+],
+"w": 1.0
+},
+{
+"id": "cin_seytan",
+"alan": "akaid",
+"tr": [
+"cin",
+"cinler",
+"şeytan",
+"iblis"
+],
+"ar": [
+"الجن",
+"الشيطان",
+"إبليس",
+"الوسوسة"
+],
+"en": [
+"jinn",
+"satan"
+],
+"w": 1.0
+},
+{
+"id": "kitaplar",
+"alan": "akaid",
+"tr": [
+"semavî kitap",
+"semavi kitap",
+"kutub",
+"indirilen kitap",
+"tevrat",
+"zebur",
+"incil"
+],
+"ar": [
+"الكتب السماوية",
+"التوراة والإنجيل",
+"الإيمان بالكتب"
+],
+"en": [
+"revealed books"
+],
+"w": 1.0
+},
+{
+"id": "sahabe",
+"alan": "akaid",
+"tr": [
+"sahâbe",
+"sahabe",
+"sahâbenin",
+"ashâb",
+"ashab",
+"ashâb-ı kirâm",
+"ashabı kiram",
+"sahabeler"
+],
+"ar": [
+"الصحابة",
+"أصحاب النبي",
+"فضل الصحابة",
+"الصحابة كلهم عدول"
+],
+"en": [
+"companions",
+"sahaba"
+],
+"w": 1.3
+},
+{
+"id": "sahabe_adalet",
+"alan": "akaid",
+"tr": [
+"sahâbenin adalet",
+"sahabe adalet",
+"sahabeye dil",
+"sahabeyi sev",
+"sahabe hakkında",
+"sahâbe hakkında",
+"sahâbenin adâlet",
+"sahabenin adalet",
+"sahabelere saygı"
+],
+"ar": [
+"عدالة الصحابة",
+"الصحابة كلهم عدول",
+"سب الصحابة",
+"الإمساك عما شجر بين الصحابة"
+],
+"en": [
+"justice of the companions"
+],
+"w": 1.8
+},
+{
+"id": "ehl_beyt",
+"alan": "akaid",
+"tr": [
+"ehl-i beyt",
+"ehli beyt",
+"ehl-i beyit",
+"ehl-i beytin",
+"âl-i resul",
+"ehlibeyt"
+],
+"ar": [
+"أهل البيت",
+"آل البيت",
+"فضل أهل البيت",
+"حب آل البيت"
+],
+"en": [
+"ahl al-bayt",
+"family of the prophet"
+],
+"w": 1.4
+},
+{
+"id": "halifelik",
+"alan": "akaid",
+"tr": [
+"halife",
+"hilâfet",
+"hilafet",
+"imâmet",
+"imamet",
+"halifelik",
+"halifenin"
+],
+"ar": [
+"الخلافة",
+"الإمامة",
+"الإمامة العظمى",
+"شروط الإمام"
+],
+"en": [
+"caliphate",
+"imamate"
+],
+"w": 1.1
+},
+{
+"id": "hulefa_rasidin",
+"alan": "akaid",
+"tr": [
+"hulefâ-yı râşidîn",
+"hulefa-yi raşidin",
+"râşid halife",
+"raşid halife",
+"dört halife",
+"râşidîn",
+"hulefâ-i râşidîn",
+"hulefâ-yı raşidîn",
+"halifelik sırası",
+"hilâfet sırası",
+"halifelerin sırası"
+],
+"ar": [
+"الخلفاء الراشدون",
+"الخلفاء الأربعة",
+"خلافة الراشدين",
+"ترتيب الخلفاء الراشدين",
+"الخلافة الراشدة"
+],
+"en": [
+"rightly guided caliphs"
+],
+"w": 1.7
+},
+{
+"id": "bidat",
+"alan": "akaid",
+"tr": [
+"bid'at",
+"bidat",
+"bid’at",
+"bid'atler",
+"bid‘at",
+"bidatlar",
+"yenilik",
+"dinde yenilik"
+],
+"ar": [
+"البدعة",
+"البدع",
+"كل بدعة ضلالة",
+"ما أحدث في الدين"
+],
+"en": [
+"innovation",
+"bidah"
+],
+"w": 1.5
+},
+{
+"id": "bidat_hasene",
+"alan": "akaid",
+"tr": [
+"bid'at-ı hasene",
+"bidat-ı hasene",
+"güzel bid'at",
+"bid'at hasene",
+"bidat hasene",
+"hasene ve seyyie",
+"bid'at çeşit",
+"bidat çeşit",
+"bid'atın çeşit",
+"bid'atın tür",
+"her yenilik",
+"her bid'at",
+"her bidat"
+],
+"ar": [
+"البدعة الحسنة",
+"البدعة الحسنة والسيئة",
+"أقسام البدعة",
+"من سن في الإسلام سنة حسنة",
+"البدعة الواجبة والمحرمة"
+],
+"en": [
+"good innovation",
+"types of bidah"
+],
+"w": 1.8
+},
+{
+"id": "tevessul",
+"alan": "akaid",
+"tr": [
+"tevessül",
+"tevessul",
+"vesile kıl",
+"vesile ile dua",
+"vesile edin",
+"vesile edi",
+"peygamberi vesile",
+"salihleri vesile"
+],
+"ar": [
+"التوسل",
+"التوسل بالنبي",
+"التوسل بالصالحين",
+"الوسيلة",
+"حكم التوسل"
+],
+"en": [
+"tawassul",
+"seeking intercession"
+],
+"w": 1.8
+},
+{
+"id": "istigase",
+"alan": "akaid",
+"tr": [
+"istiğâse",
+"istigase",
+"istiğase",
+"yardım dile",
+"meded"
+],
+"ar": [
+"الاستغاثة",
+"الاستغاثة بالنبي",
+"الاستمداد"
+],
+"en": [
+"istighatha",
+"seeking help"
+],
+"w": 1.0
+},
+{
+"id": "kabir_ziyaret",
+"alan": "akaid",
+"tr": [
+"kabir ziyaret",
+"kabirleri ziyaret",
+"türbe ziyaret",
+"mezar ziyaret",
+"kabir ziyareti"
+],
+"ar": [
+"زيارة القبور",
+"زيارة قبر النبي",
+"حكم زيارة القبور",
+"الاستشفاع"
+],
+"en": [
+"visiting graves"
+],
+"w": 1.0
+},
+{
+"id": "mevlid",
+"alan": "akaid",
+"tr": [
+"mevlid",
+"mevlit",
+"mevlid kandil",
+"mevlid-i şerif"
+],
+"ar": [
+"المولد النبوي",
+"المولد",
+"الاحتفال بالمولد",
+"المولد الشريف"
+],
+"en": [
+"mawlid"
+],
+"w": 1.0
+},
+{
+"id": "dua",
+"alan": "akaid",
+"tr": [
+"dua",
+"duâ",
+"dualar",
+"duanın kabul"
+],
+"ar": [
+"الدعاء",
+"آداب الدعاء",
+"استجابة الدعاء"
+],
+"en": [
+"supplication",
+"dua"
+],
+"w": 1.0
+},
+{
+"id": "istiva",
+"alan": "akaid",
+"tr": [
+"istivâ",
+"istiva",
+"arş",
+"allah'ın arş",
+"mekân",
+"mekan tutmaz"
+],
+"ar": [
+"الاستواء",
+"العرش",
+"الاستواء على العرش",
+"تنزيه الله عن المكان"
+],
+"en": [
+"istiwa",
+"god on the throne"
+],
+"w": 1.4
+},
+{
+"id": "muteshabih_sifat",
+"alan": "akaid",
+"tr": [
+"müteşâbih sıfat",
+"müteşabih sıfat",
+"yed",
+"vech",
+"ayât-ı sıfat",
+"sıfat ayetleri",
+"haberî sıfat",
+"habere dayanan sıfat"
+],
+"ar": [
+"آيات الصفات",
+"أحاديث الصفات",
+"الصفات الخبرية",
+"التأويل والتفويض"
+],
+"en": [
+"ambiguous attributes verses"
+],
+"w": 1.5
+},
+{
+"id": "tevil_tefviz",
+"alan": "akaid",
+"tr": [
+"te'vil",
+"tevil",
+"tefviz",
+"tefvîz",
+"tenzih",
+"teşbih",
+"tecsîm",
+"tecsim"
+],
+"ar": [
+"التأويل",
+"التفويض",
+"التنزيه",
+"التشبيه",
+"التجسيم"
+],
+"en": [
+"interpretation",
+"delegation",
+"anthropomorphism"
+],
+"w": 1.4
+},
+{
+"id": "mehdi",
+"alan": "akaid",
+"tr": [
+"mehdî",
+"mehdi",
+"deccal",
+"deccâl",
+"kıyamet alâmet",
+"kıyamet alamet",
+"ahir zaman",
+"âhir zaman",
+"ahirzaman"
+],
+"ar": [
+"المهدي",
+"الدجال",
+"أشراط الساعة",
+"علامات الساعة",
+"آخر الزمان"
+],
+"en": [
+"mahdi",
+"dajjal",
+"signs of the hour"
+],
+"w": 1.0
+},
+{
+"id": "kiyamet",
+"alan": "akaid",
+"tr": [
+"kıyamet",
+"kıyâmet",
+"sûr",
+"israfil",
+"isrâfîl"
+],
+"ar": [
+"القيامة",
+"الساعة",
+"النفخ في الصور",
+"إسرافيل"
+],
+"en": [
+"day of resurrection"
+],
+"w": 1.0
+},
+{
+"id": "ruh",
+"alan": "akaid",
+"tr": [
+"ruh",
+"rûh",
+"ruhun",
+"ruh nedir",
+"ruhun mahiyeti"
+],
+"ar": [
+"الروح",
+"حقيقة الروح",
+"مسألة الروح"
+],
+"en": [
+"soul",
+"spirit"
+],
+"w": 1.0
+},
+{
+"id": "akaid_genel",
+"alan": "akaid",
+"tr": [
+"akaid",
+"akâid",
+"akîde",
+"itikad",
+"i'tikad",
+"itikat",
+"inanç esas",
+"inanç sistem"
+],
+"ar": [
+"العقيدة",
+"العقائد",
+"الاعتقاد",
+"عقائد أهل السنة",
+"علم التوحيد"
+],
+"en": [
+"creed",
+"doctrine"
+],
+"w": 1.0
+},
+{
+"id": "kelam",
+"alan": "akaid",
+"tr": [
+"kelâm",
+"kelam ilmi",
+"ilm-i kelâm",
+"ilmi kelam",
+"kelamcı",
+"kelamcılar",
+"mütekellim"
+],
+"ar": [
+"علم الكلام",
+"المتكلمون",
+"الكلام"
+],
+"en": [
+"islamic theology",
+"kalam"
+],
+"w": 1.1
+},
+{
+"id": "allah_ilim_irade",
+"alan": "akaid",
+"tr": [
+"allah'ın ilmi",
+"allah'ın iradesi",
+"allah'ın kudreti",
+"allah'ın kelâmı",
+"kelâmullah",
+"allah'ın kelamı"
+],
+"ar": [
+"علم الله",
+"إرادة الله",
+"قدرة الله",
+"كلام الله"
+],
+"en": [
+"gods knowledge",
+"gods will"
+],
+"w": 1.0
+},
+{
+"id": "kuran_mahluk",
+"alan": "akaid",
+"tr": [
+"kur'an mahluk",
+"kuran mahluk",
+"halku'l-kur'ân",
+"halkül kur'an",
+"mihne"
+],
+"ar": [
+"خلق القرآن",
+"القرآن كلام الله غير مخلوق",
+"المحنة"
+],
+"en": [
+"created quran"
+],
+"w": 1.0
+},
+{
+"id": "tasavvuf",
+"alan": "tasavvuf",
+"tr": [
+"tasavvuf",
+"sûfî",
+"sufi",
+"sufî",
+"tasavvufî",
+"sofi",
+"sûfîler",
+"mutasavvıf"
+],
+"ar": [
+"التصوف",
+"الصوفية",
+"الصوفي",
+"علم التصوف",
+"تعريف التصوف"
+],
+"en": [
+"sufism",
+"tasawwuf"
+],
+"w": 1.3
+},
+{
+"id": "ihsan",
+"alan": "tasavvuf",
+"tr": [
+"ihsan",
+"ihsân",
+"ihsan makam"
+],
+"ar": [
+"الإحسان",
+"مقام الإحسان",
+"أن تعبد الله كأنك تراه"
+],
+"en": [
+"ihsan",
+"excellence in worship"
+],
+"w": 1.4
+},
+{
+"id": "cibril_hadisi",
+"alan": "tasavvuf",
+"tr": [
+"cibril hadis",
+"cebrail hadis",
+"hadis-i cibril",
+"cibrîl hadis",
+"cibril'in sorduğu",
+"cebrâil hadis"
+],
+"ar": [
+"حديث جبريل",
+"حديث جبريل في الإيمان والإسلام والإحسان",
+"أن تعبد الله كأنك تراه"
+],
+"en": [
+"hadith of jibril"
+],
+"w": 1.5
+},
+{
+"id": "tevbe",
+"alan": "tasavvuf",
+"tr": [
+"tövbe",
+"tevbe",
+"tövbenin",
+"tevbenin",
+"tövbe etmek",
+"tevbe etmek",
+"nasuh tevbe",
+"tövbe-i nasuh"
+],
+"ar": [
+"التوبة",
+"التوبة النصوح",
+"حقيقة التوبة"
+],
+"en": [
+"repentance",
+"tawba"
+],
+"w": 1.3
+},
+{
+"id": "tevbe_sart",
+"alan": "tasavvuf",
+"tr": [
+"tövbenin şart",
+"tevbenin şart",
+"tövbe şart",
+"tövbenin rükn",
+"tövbenin kabul",
+"tövbe nasıl"
+],
+"ar": [
+"شروط التوبة",
+"شروط التوبة النصوح",
+"الندم والإقلاع والعزم",
+"التوبة وشروطها"
+],
+"en": [
+"conditions of repentance"
+],
+"w": 1.8
+},
+{
+"id": "zuhd",
+"alan": "tasavvuf",
+"tr": [
+"zühd",
+"züht",
+"zâhid",
+"zahid",
+"dünyadan el etek"
+],
+"ar": [
+"الزهد",
+"الزاهد",
+"فضل الزهد",
+"الزهد في الدنيا"
+],
+"en": [
+"asceticism",
+"zuhd"
+],
+"w": 1.4
+},
+{
+"id": "vera",
+"alan": "tasavvuf",
+"tr": [
+"verâ'",
+"vera",
+"verâ",
+"şüpheli şeylerden sakın",
+"takvâ",
+"takva",
+"muttaki"
+],
+"ar": [
+"الورع",
+"التقوى",
+"ترك الشبهات"
+],
+"en": [
+"scrupulousness",
+"taqwa"
+],
+"w": 1.0
+},
+{
+"id": "kanaat_tevekkul",
+"alan": "tasavvuf",
+"tr": [
+"kanaat",
+"tevekkül",
+"tevekkul",
+"rızık",
+"rızk"
+],
+"ar": [
+"القناعة",
+"التوكل",
+"الرزق"
+],
+"en": [
+"contentment",
+"reliance on god"
+],
+"w": 1.0
+},
+{
+"id": "sabir_sukur_riza",
+"alan": "tasavvuf",
+"tr": [
+"sabır",
+"şükür",
+"rıza",
+"razı olmak",
+"teslimiyet"
+],
+"ar": [
+"الصبر",
+"الشكر",
+"الرضا",
+"التسليم"
+],
+"en": [
+"patience",
+"gratitude",
+"contentment"
+],
+"w": 1.0
+},
+{
+"id": "ihlas",
+"alan": "tasavvuf",
+"tr": [
+"ihlâs",
+"ihlas",
+"ihlasla",
+"samimiyet",
+"halis niyet"
+],
+"ar": [
+"الإخلاص",
+"حقيقة الإخلاص"
+],
+"en": [
+"sincerity",
+"ikhlas"
+],
+"w": 0.9
+},
+{
+"id": "sidk_haya",
+"alan": "tasavvuf",
+"tr": [
+"sıdk",
+"doğruluk",
+"haya",
+"edep ve haya",
+"tevâzu",
+"tevazu",
+"alçakgönüllü"
+],
+"ar": [
+"الصدق",
+"الحياء",
+"التواضع"
+],
+"en": [
+"truthfulness",
+"modesty",
+"humility"
+],
+"w": 1.0
+},
+{
+"id": "cömertlik_hilm",
+"alan": "tasavvuf",
+"tr": [
+"cömertlik",
+"cömert",
+"sehâ",
+"cûd",
+"hilm",
+"affetme",
+"hoşgörü"
+],
+"ar": [
+"السخاء",
+"الجود",
+"الحلم",
+"العفو"
+],
+"en": [
+"generosity",
+"forbearance"
+],
+"w": 1.0
+},
+{
+"id": "muhabbet",
+"alan": "tasavvuf",
+"tr": [
+"muhabbet",
+"muhabbetullah",
+"allah sevgisi",
+"allah'ı sev",
+"allaha muhabbet",
+"aşk-ı ilâhî",
+"ilahi aşk",
+"ilâhî aşk",
+"aşk",
+"sevgi"
+],
+"ar": [
+"المحبة",
+"محبة الله",
+"العشق الإلهي",
+"علامات محبة الله"
+],
+"en": [
+"divine love",
+"mahabba"
+],
+"w": 1.3
+},
+{
+"id": "suluk",
+"alan": "tasavvuf",
+"tr": [
+"sülûk",
+"suluk",
+"seyr-i sülûk",
+"seyri sülûk",
+"seyr ü sülûk",
+"sâlik",
+"salik",
+"manevî yolculuk",
+"manevi yolculuk"
+],
+"ar": [
+"السلوك",
+"السير إلى الله",
+"طريق السالكين",
+"السالك",
+"مراتب السلوك"
+],
+"en": [
+"spiritual path",
+"suluk",
+"wayfaring"
+],
+"w": 1.6
+},
+{
+"id": "tarikat",
+"alan": "tasavvuf",
+"tr": [
+"tarikat",
+"tarîkat",
+"tarikatlar",
+"tarikatın"
+],
+"ar": [
+"الطريقة",
+"الطرق الصوفية",
+"الطريقة الصوفية"
+],
+"en": [
+"sufi order",
+"tariqa"
+],
+"w": 1.2
+},
+{
+"id": "mursid_murid",
+"alan": "tasavvuf",
+"tr": [
+"mürşid",
+"mursid",
+"mürid",
+"murid",
+"şeyh",
+"seyh",
+"mürşid-i kâmil",
+"pir"
+],
+"ar": [
+"المرشد",
+"المريد",
+"الشيخ المربي",
+"الشيخ",
+"شيخ التربية"
+],
+"en": [
+"spiritual guide",
+"disciple",
+"sheikh"
+],
+"w": 1.1
+},
+{
+"id": "tarikat_edebi",
+"alan": "tasavvuf",
+"tr": [
+"tarikat edebi",
+"mürit edebi",
+"mürşid edebi",
+"şeyh edebi",
+"tarikat âdâb",
+"mürid mürşid",
+"mürit ile mürşid",
+"mürşidle mürit",
+"mürşide karşı edep",
+"şeyhe karşı edep",
+"mürit ve mürşid",
+"mürid ve mürşid"
+],
+"ar": [
+"آداب المريد مع شيخه",
+"آداب الطريق",
+"آداب الصحبة",
+"آداب الشيخ والمريد",
+"أدب المريد"
+],
+"en": [
+"etiquette of the disciple with his sheikh"
+],
+"w": 1.9
+},
+{
+"id": "edep",
+"alan": "tasavvuf",
+"tr": [
+"edep",
+"edeb",
+"âdâb",
+"adab",
+"edeple",
+"güzel ahlak",
+"ahlâk",
+"ahlak"
+],
+"ar": [
+"الأدب",
+"الآداب",
+"حسن الخلق",
+"مكارم الأخلاق"
+],
+"en": [
+"etiquette",
+"adab",
+"good character"
+],
+"w": 0.8
+},
+{
+"id": "zikir",
+"alan": "tasavvuf",
+"tr": [
+"zikir",
+"zikr",
+"zikrullah",
+"zikreden",
+"zikrin"
+],
+"ar": [
+"الذكر",
+"ذكر الله",
+"فضل الذكر",
+"أنواع الذكر"
+],
+"en": [
+"remembrance of god",
+"dhikr"
+],
+"w": 1.3
+},
+{
+"id": "zikir_cesit",
+"alan": "tasavvuf",
+"tr": [
+"zikir çeşit",
+"zikrin çeşit",
+"zikir türleri",
+"cehrî zikir",
+"hafî zikir",
+"cehri zikir",
+"hafi zikir",
+"zikir çeşitleri"
+],
+"ar": [
+"الذكر الجهري",
+"الذكر الخفي",
+"أنواع الذكر",
+"الذكر باللسان والقلب"
+],
+"en": [
+"types of dhikr",
+"loud and silent dhikr"
+],
+"w": 1.7
+},
+{
+"id": "vird_tesbih",
+"alan": "tasavvuf",
+"tr": [
+"vird",
+"evrâd",
+"evrad",
+"tesbih",
+"tesbihat",
+"salavat",
+"salavât",
+"hatim"
+],
+"ar": [
+"الورد",
+"الأوراد",
+"التسبيح",
+"الصلاة على النبي"
+],
+"en": [
+"litany",
+"wird",
+"tasbih"
+],
+"w": 1.0
+},
+{
+"id": "halvet_riyazet",
+"alan": "tasavvuf",
+"tr": [
+"halvet",
+"uzlet",
+"çile",
+"riyâzet",
+"riyazet",
+"mücâhede",
+"mücahede",
+"nefis mücadele"
+],
+"ar": [
+"الخلوة",
+"العزلة",
+"الرياضة",
+"المجاهدة",
+"مجاهدة النفس"
+],
+"en": [
+"seclusion",
+"spiritual discipline",
+"mujahada"
+],
+"w": 1.3
+},
+{
+"id": "makam_hal",
+"alan": "tasavvuf",
+"tr": [
+"makam ile hal",
+"makam ve hal",
+"makamlar",
+"hâl ile makam",
+"hal ile makam",
+"makam hal",
+"hâl ve makam",
+"makâm ile hâl",
+"makâm ve hâl",
+"hâl ve makâm",
+"makâmât",
+"makam",
+"makâm"
+],
+"ar": [
+"الفرق بين الحال والمقام",
+"المقامات والأحوال",
+"المقام",
+"الحال",
+"أحوال الصوفية"
+],
+"en": [
+"stations and states",
+"maqam and hal"
+],
+"w": 1.7
+},
+{
+"id": "havf_reca",
+"alan": "tasavvuf",
+"tr": [
+"havf",
+"recâ",
+"reca",
+"korku ve umut",
+"havf ve recâ",
+"havf ile recâ",
+"havf reca",
+"korku ve ümit",
+"korku ile ümit",
+"umut ve korku"
+],
+"ar": [
+"الخوف والرجاء",
+"الخوف",
+"الرجاء",
+"التوازن بين الخوف والرجاء"
+],
+"en": [
+"fear and hope",
+"khawf and raja"
+],
+"w": 1.7
+},
+{
+"id": "murakabe_muhasebe",
+"alan": "tasavvuf",
+"tr": [
+"murâkabe",
+"murakabe",
+"muhâsebe",
+"muhasebe",
+"nefis muhasebe",
+"kendini hesaba çek"
+],
+"ar": [
+"المراقبة",
+"المحاسبة",
+"محاسبة النفس",
+"المراقبة والمحاسبة"
+],
+"en": [
+"vigilance",
+"self-accounting",
+"muraqaba",
+"muhasaba"
+],
+"w": 1.6
+},
+{
+"id": "nefs",
+"alan": "tasavvuf",
+"tr": [
+"nefis",
+"nefs",
+"nefsin",
+"nefs terbiye",
+"nefis terbiye",
+"nefsi terbiye",
+"tezkiye",
+"tezkiye-i nefs"
+],
+"ar": [
+"النفس",
+"تزكية النفس",
+"تهذيب النفس",
+"مجاهدة النفس",
+"النفس والهوى"
+],
+"en": [
+"the self",
+"nafs",
+"purification of the soul"
+],
+"w": 1.0
+},
+{
+"id": "nefs_mertebe",
+"alan": "tasavvuf",
+"tr": [
+"nefsin mertebe",
+"nefis mertebe",
+"nefsin derece",
+"nefis derece",
+"nefs mertebeleri",
+"nefs-i emmâre",
+"emmâre",
+"emmare",
+"levvâme",
+"levvame",
+"mutmainne",
+"mülhime",
+"râdıye",
+"radiye",
+"marziyye",
+"sâfiye"
+],
+"ar": [
+"النفس الأمارة",
+"النفس اللوامة",
+"النفس المطمئنة",
+"مراتب النفس",
+"النفس الملهمة"
+],
+"en": [
+"levels of the nafs"
+],
+"w": 1.9
+},
+{
+"id": "kalp",
+"alan": "tasavvuf",
+"tr": [
+"kalp",
+"kalbin",
+"kalbi",
+"gönül",
+"kalb",
+"kalp temizliği"
+],
+"ar": [
+"القلب",
+"أعمال القلوب",
+"تصفية القلب",
+"سلامة القلب"
+],
+"en": [
+"heart",
+"the heart"
+],
+"w": 0.8
+},
+{
+"id": "kalp_hastalik",
+"alan": "tasavvuf",
+"tr": [
+"kalp hastalık",
+"kalbin hastalık",
+"kalp hastalıkları",
+"kalbin afet",
+"kalp afet",
+"manevî hastalık",
+"manevi hastalık",
+"gönül hastalık"
+],
+"ar": [
+"أمراض القلوب",
+"آفات القلب",
+"علاج أمراض القلوب"
+],
+"en": [
+"diseases of the heart"
+],
+"w": 1.8
+},
+{
+"id": "riya",
+"alan": "tasavvuf",
+"tr": [
+"riya",
+"ria",
+"gösteriş",
+"riyâ"
+],
+"ar": [
+"الرياء",
+"الشرك الخفي",
+"خطر الرياء"
+],
+"en": [
+"ostentation",
+"riya"
+],
+"w": 1.0
+},
+{
+"id": "kibir",
+"alan": "tasavvuf",
+"tr": [
+"kibir",
+"kibr",
+"büyüklenme",
+"kibirlen"
+],
+"ar": [
+"الكبر",
+"ذم الكبر",
+"التكبر"
+],
+"en": [
+"arrogance",
+"pride",
+"kibr"
+],
+"w": 1.0
+},
+{
+"id": "ucb",
+"alan": "tasavvuf",
+"tr": [
+"ucb",
+"ucub",
+"kendini beğen",
+"kendini be",
+"gurur"
+],
+"ar": [
+"العجب",
+"ذم العجب",
+"الإعجاب بالنفس"
+],
+"en": [
+"self-admiration",
+"ujb"
+],
+"w": 1.0
+},
+{
+"id": "hased_gibta",
+"alan": "tasavvuf",
+"tr": [
+"hased",
+"haset",
+"kıskanç",
+"kıskanma",
+"gıpta"
+],
+"ar": [
+"الحسد",
+"الغبطة",
+"ذم الحسد"
+],
+"en": [
+"envy",
+"hasad"
+],
+"w": 1.0
+},
+{
+"id": "giybet_gazap",
+"alan": "tasavvuf",
+"tr": [
+"gıybet",
+"dedikodu",
+"gazap",
+"öfke",
+"kin",
+"hırs",
+"cimrilik",
+"buhl"
+],
+"ar": [
+"الغيبة",
+"الغضب",
+"الحقد",
+"الحرص",
+"البخل"
+],
+"en": [
+"backbiting",
+"anger",
+"greed"
+],
+"w": 1.0
+},
+{
+"id": "marifet",
+"alan": "tasavvuf",
+"tr": [
+"marifet",
+"ma'rifet",
+"marifetullah",
+"irfan",
+"ârif",
+"arif billah",
+"allah'ı tanı"
+],
+"ar": [
+"المعرفة",
+"معرفة الله",
+"العرفان",
+"العارف بالله"
+],
+"en": [
+"gnosis",
+"marifa"
+],
+"w": 1.3
+},
+{
+"id": "fena_beka",
+"alan": "tasavvuf",
+"tr": [
+"fenâ",
+"fena",
+"bekâ billâh",
+"fenâ fillâh",
+"fena fillah",
+"fenâ ve bekâ",
+"fena ve beka"
+],
+"ar": [
+"الفناء",
+"البقاء",
+"الفناء والبقاء",
+"الفناء في الله"
+],
+"en": [
+"annihilation and subsistence",
+"fana and baqa"
+],
+"w": 1.5
+},
+{
+"id": "vahdet_vucud",
+"alan": "tasavvuf",
+"tr": [
+"vahdet-i vücûd",
+"vahdet-i vücud",
+"vahdeti vücud",
+"vahdet i vücud",
+"vahdet-i vücut",
+"vahdet-i şuhûd",
+"vahdet-i suhud",
+"vahdeti şühud",
+"vahdet-i şühud",
+"birlik anlayışı",
+"vücûd birliği"
+],
+"ar": [
+"وحدة الوجود",
+"وحدة الشهود",
+"القول بوحدة الوجود",
+"الاتحاد والحلول"
+],
+"en": [
+"unity of being",
+"wahdat al-wujud"
+],
+"w": 1.8
+},
+{
+"id": "kesf_ilham",
+"alan": "tasavvuf",
+"tr": [
+"ilham",
+"firâset",
+"firaset",
+"hâtır",
+"ledünnî",
+"ledün",
+"kerâmet-i keşf",
+"keşf-i kevnî",
+"keşf ve ilham",
+"ilhâm-ı ilâhî"
+],
+"ar": [
+"الكشف",
+"الإلهام",
+"الفراسة",
+"العلم اللدني"
+],
+"en": [
+"unveiling",
+"inspiration",
+"kashf"
+],
+"w": 1.0
+},
+{
+"id": "rabita_himmet",
+"alan": "tasavvuf",
+"tr": [
+"râbıta",
+"rabıta",
+"himmet",
+"feyz",
+"teveccüh",
+"tasarruf",
+"intisab",
+"biat",
+"bey'at"
+],
+"ar": [
+"الرابطة",
+"الهمة",
+"الفيض",
+"التوجه",
+"البيعة",
+"الانتساب"
+],
+"en": [
+"rabita",
+"spiritual attention"
+],
+"w": 1.0
+},
+{
+"id": "sema_vecd",
+"alan": "tasavvuf",
+"tr": [
+"semâ",
+"sema",
+"vecd",
+"istiğrak",
+"cezbe",
+"zevk",
+"sekr",
+"sahv",
+"kabz",
+"bast",
+"üns",
+"heybet"
+],
+"ar": [
+"السماع",
+"الوجد",
+"الجذبة",
+"الذوق",
+"السكر والصحو",
+"القبض والبسط",
+"الأنس والهيبة"
+],
+"en": [
+"sama",
+"ecstasy",
+"wajd"
+],
+"w": 1.2
+},
+{
+"id": "fakr",
+"alan": "tasavvuf",
+"tr": [
+"fakr",
+"fakirlik",
+"fakir dervi",
+"derviş",
+"dervis",
+"dervişlik"
+],
+"ar": [
+"الفقر",
+"الفقير",
+"الدرويش",
+"فقر الصوفية"
+],
+"en": [
+"poverty",
+"dervish"
+],
+"w": 1.0
+},
+{
+"id": "tefekkur_olum",
+"alan": "tasavvuf",
+"tr": [
+"tefekkür",
+"ölümü hatırla",
+"ölüm",
+"mevt",
+"âhiret düşün",
+"dünya",
+"dünyanın aldatıcı"
+],
+"ar": [
+"التفكر",
+"ذكر الموت",
+"ذم الدنيا",
+"الدنيا"
+],
+"en": [
+"contemplation",
+"remembrance of death",
+"the world"
+],
+"w": 0.6
+},
+{
+"id": "teheccud",
+"alan": "tasavvuf",
+"tr": [
+"teheccüd",
+"gece namaz",
+"seher vakti",
+"nâfile",
+"nafile ibadet",
+"kıyâmü'l-leyl"
+],
+"ar": [
+"التهجد",
+"قيام الليل",
+"النوافل"
+],
+"en": [
+"night prayer",
+"tahajjud"
+],
+"w": 1.0
+},
+{
+"id": "veli",
+"alan": "tasavvuf",
+"tr": [
+"velî",
+"veli",
+"evliyâ",
+"evliya",
+"velâyet",
+"velayet",
+"evliyaullah",
+"dostları"
+],
+"ar": [
+"الولي",
+"الأولياء",
+"الولاية",
+"كرامات الأولياء",
+"أولياء الله"
+],
+"en": [
+"saints",
+"wali",
+"friends of god"
+],
+"w": 1.4
+},
+{
+"id": "kutub_abdal",
+"alan": "tasavvuf",
+"tr": [
+"kutub",
+"kutup",
+"abdal",
+"gavs",
+"ricâl-i gayb",
+"evtâd",
+"evtad"
+],
+"ar": [
+"القطب",
+"الأبدال",
+"الغوث",
+"الأوتاد",
+"رجال الغيب"
+],
+"en": [
+"qutb",
+"abdal"
+],
+"w": 1.0
+},
+{
+"id": "suhbet_hirka",
+"alan": "tasavvuf",
+"tr": [
+"sohbet",
+"hırka",
+"hırka-i şerif",
+"hatm-i hâcegân",
+"silsile",
+"icazet",
+"icâzet",
+"irşad",
+"irşâd",
+"halife tayin"
+],
+"ar": [
+"الصحبة",
+"الخرقة",
+"السلسلة",
+"الإجازة",
+"الإرشاد",
+"الخلافة في الطريقة"
+],
+"en": [
+"suhba",
+"khirqa",
+"chain of transmission",
+"ijaza"
+],
+"w": 1.0
+},
+{
+"id": "kadiri",
+"alan": "tasavvuf",
+"tr": [
+"kâdirî",
+"kadiri",
+"kâdiriyye",
+"kadiriyye",
+"kadirilik"
+],
+"ar": [
+"القادرية",
+"الطريقة القادرية"
+],
+"en": [
+"qadiriyya"
+],
+"w": 1.0
+},
+{
+"id": "nakshibendi",
+"alan": "tasavvuf",
+"tr": [
+"nakşibendî",
+"nakşibendi",
+"nakşî",
+"naksi",
+"nakşibendiyye",
+"bahâeddîn nakşibend",
+"bahaeddin nakşibend",
+"hâlidiyye",
+"halidi"
+],
+"ar": [
+"النقشبندية",
+"الطريقة النقشبندية",
+"بهاء الدين نقشبند",
+"الخالدية"
+],
+"en": [
+"naqshbandi",
+"naqshbandiyya"
+],
+"w": 1.0
+},
+{
+"id": "mevlevi",
+"alan": "tasavvuf",
+"tr": [
+"mevlevî",
+"mevlevi",
+"mevlevîlik",
+"mevlevilik",
+"sema ayini",
+"mevlevihane",
+"dönen dervi"
+],
+"ar": [
+"المولوية",
+"الطريقة المولوية",
+"جلال الدين الرومي"
+],
+"en": [
+"mevlevi order",
+"whirling dervishes"
+],
+"w": 1.0
+},
+{
+"id": "rufai",
+"alan": "tasavvuf",
+"tr": [
+"rufâî",
+"rifâî",
+"rufai",
+"rifai",
+"rifâiyye",
+"rufâiyye",
+"ahmed er-rifâî"
+],
+"ar": [
+"الرفاعية",
+"الطريقة الرفاعية",
+"أحمد الرفاعي"
+],
+"en": [
+"rifai order"
+],
+"w": 1.0
+},
+{
+"id": "halveti",
+"alan": "tasavvuf",
+"tr": [
+"halvetî",
+"halveti",
+"halvetiyye",
+"celvetî",
+"celveti"
+],
+"ar": [
+"الخلوتية",
+"الطريقة الخلوتية"
+],
+"en": [
+"khalwati"
+],
+"w": 1.0
+},
+{
+"id": "sazeli",
+"alan": "tasavvuf",
+"tr": [
+"şâzelî",
+"şazeli",
+"şâzeliyye",
+"şazeliyye",
+"ebü'l-hasan eş-şâzelî"
+],
+"ar": [
+"الشاذلية",
+"الطريقة الشاذلية",
+"أبو الحسن الشاذلي"
+],
+"en": [
+"shadhili"
+],
+"w": 1.0
+},
+{
+"id": "yesevi_bektasi",
+"alan": "tasavvuf",
+"tr": [
+"yesevî",
+"yesevi",
+"ahmed yesevî",
+"hoca ahmed yesevî",
+"bektâşî",
+"bektaşi",
+"hacı bektaş",
+"ahilik",
+"ahî",
+"kübrevî",
+"kübreviyye",
+"sühreverdiyye",
+"sühreverdî"
+],
+"ar": [
+"اليسوية",
+"أحمد اليسوي",
+"البكتاشية",
+"الكبروية",
+"السهروردية",
+"نجم الدين الكبرى"
+],
+"en": [
+"yasawi",
+"bektashi",
+"kubrawi",
+"suhrawardi"
+],
+"w": 1.0
+},
+{
+"id": "geylani",
+"alan": "tasavvuf",
+"tr": [
+"abdülkadir geylânî",
+"abdulkadir geylani",
+"abdülkâdir-i geylânî",
+"geylânî",
+"geylani",
+"gîlânî",
+"gavs-ı a'zam",
+"gavsül azam",
+"abdülkâdir",
+"abdulkadir"
+],
+"ar": [
+"عبد القادر الجيلاني",
+"الجيلاني",
+"الجيلي",
+"الغنية لطالبي طريق الحق",
+"الفتح الرباني",
+"فتوح الغيب"
+],
+"en": [
+"abdul qadir gilani",
+"jilani"
+],
+"w": 1.7
+},
+{
+"id": "gazali",
+"alan": "tasavvuf",
+"tr": [
+"gazâlî",
+"gazali",
+"imam gazâlî",
+"imam gazali",
+"hüccetü'l-islâm",
+"hüccetülislam",
+"ebû hâmid",
+"gazzâlî",
+"gazzali"
+],
+"ar": [
+"الغزالي",
+"أبو حامد الغزالي",
+"حجة الإسلام",
+"إحياء علوم الدين",
+"الغزالي والتصوف"
+],
+"en": [
+"al-ghazali",
+"ghazali"
+],
+"w": 1.7
+},
+{
+"id": "ihya",
+"alan": "tasavvuf",
+"tr": [
+"ihyâ",
+"ihya",
+"ihyâu",
+"ihya-i ulûm",
+"ihyâ-i ulûmiddîn",
+"ihyâ'u ulûmi'd-dîn",
+"ihyau ulumiddin"
+],
+"ar": [
+"إحياء علوم الدين",
+"كتاب إحياء علوم الدين",
+"الإحياء للغزالي"
+],
+"en": [
+"revival of religious sciences",
+"ihya ulum al-din"
+],
+"w": 1.6
+},
+{
+"id": "mevlana",
+"alan": "tasavvuf",
+"tr": [
+"mevlânâ",
+"mevlana",
+"celâleddîn-i rûmî",
+"celaleddin rumi",
+"celâleddin-i rûmî",
+"celaleddin-i rumi",
+"rûmî",
+"rumi",
+"mesnevî",
+"mesnevi",
+"dîvân-ı kebîr",
+"konya mevlana",
+"hazret-i mevlânâ"
+],
+"ar": [
+"جلال الدين الرومي",
+"المثنوي",
+"مولانا جلال الدين",
+"المثنوي المعنوي",
+"مولانا الرومي"
+],
+"en": [
+"rumi",
+"jalal ad-din rumi",
+"masnavi"
+],
+"w": 1.7
+},
+{
+"id": "sems",
+"alan": "tasavvuf",
+"tr": [
+"şems-i tebrîzî",
+"şems",
+"şemseddin tebrizi",
+"şems-i tebrizî",
+"şemsi tebrizi"
+],
+"ar": [
+"شمس التبريزي",
+"شمس الدين التبريزي"
+],
+"en": [
+"shams tabrizi"
+],
+"w": 1.0
+},
+{
+"id": "ibn_arabi",
+"alan": "tasavvuf",
+"tr": [
+"ibn arabî",
+"ibn arabi",
+"ibnü'l-arabî",
+"ibnül arabî",
+"muhyiddin ibn",
+"muhyiddîn",
+"şeyh-i ekber",
+"şeyhü'l-ekber",
+"şeyh-i ekber",
+"şeyhul ekber",
+"fusûsü'l-hikem",
+"fusus",
+"füsûs",
+"füsus",
+"fütûhât",
+"fütuhat",
+"fütûhât-ı mekkiyye",
+"fütuhat-ı mekkiyye"
+],
+"ar": [
+"ابن عربي",
+"محيي الدين بن عربي",
+"الفتوحات المكية",
+"فصوص الحكم",
+"الشيخ الأكبر",
+"ابن العربي الحاتمي"
+],
+"en": [
+"ibn arabi",
+"muhyiddin ibn arabi",
+"futuhat al-makkiyya",
+"fusus al-hikam"
+],
+"w": 1.9
+},
+{
+"id": "kusayri",
+"alan": "tasavvuf",
+"tr": [
+"kuşeyrî",
+"kuseyri",
+"kuşeyri",
+"risâle-i kuşeyriyye",
+"risale-i kuşeyriyye",
+"risâle-i kuşeyrî"
+],
+"ar": [
+"القشيري",
+"الرسالة القشيرية",
+"عبد الكريم القشيري"
+],
+"en": [
+"al-qushayri",
+"risala qushayriyya"
+],
+"w": 1.6
+},
+{
+"id": "cuneyd",
+"alan": "tasavvuf",
+"tr": [
+"cüneyd",
+"cüneyd-i bağdâdî",
+"cuneyd",
+"cüneyd-i bagdadi"
+],
+"ar": [
+"الجنيد البغدادي",
+"الجنيد",
+"سيد الطائفة"
+],
+"en": [
+"junayd of baghdad"
+],
+"w": 1.0
+},
+{
+"id": "hasan_basri_rabia",
+"alan": "tasavvuf",
+"tr": [
+"hasan-ı basrî",
+"hasan basri",
+"hasan-i basri",
+"râbia",
+"rabia",
+"râbi'a el-adeviyye",
+"rabia adeviyye",
+"ibrahim edhem",
+"ma'ruf-i kerhî",
+"ebû yezîd",
+"bâyezîd-i bistâmî",
+"bayezid-i bistami",
+"bistami",
+"bistâmî",
+"hallâc",
+"hallac",
+"hallâc-ı mansûr",
+"şiblî",
+"sibli",
+"zünnûn-ı mısrî",
+"zunnun",
+"fudayl b. iyaz"
+],
+"ar": [
+"الحسن البصري",
+"رابعة العدوية",
+"إبراهيم بن أدهم",
+"معروف الكرخي",
+"أبو يزيد البسطامي",
+"الحلاج",
+"الشبلي",
+"ذو النون المصري",
+"الفضيل بن عياض"
+],
+"en": [
+"hasan al-basri",
+"rabia al-adawiyya",
+"bayazid bistami",
+"al-hallaj"
+],
+"w": 1.0
+},
+{
+"id": "ibn_ataullah",
+"alan": "tasavvuf",
+"tr": [
+"ibn atâillâh",
+"ibn ataullah",
+"ibn atâullah",
+"ibn atâ",
+"hikem-i atâiyye",
+"el-hikem",
+"hikem-i ataiyye",
+"ibn atâillâh es-sekenderî"
+],
+"ar": [
+"ابن عطاء الله السكندري",
+"الحكم العطائية",
+"لطائف المنن"
+],
+"en": [
+"ibn ata allah",
+"al-hikam"
+],
+"w": 1.6
+},
+{
+"id": "suhrawardi_muhasibi",
+"alan": "tasavvuf",
+"tr": [
+"hâris el-muhâsibî",
+"harisül muhasibi",
+"muhasibi",
+"sühreverdî",
+"suhreverdi",
+"avârifü'l-me'ârif",
+"avarif",
+"ebû tâlib el-mekkî",
+"ebu talib mekki",
+"kûtü'l-kulûb",
+"kutül kulub",
+"serrâc",
+"serrac",
+"el-lüma'",
+"sülemî",
+"sulemi",
+"tabakâtü's-sûfiyye",
+"hücvirî",
+"kelâbâzî",
+"kelabazi",
+"et-ta'arruf",
+"hakîm-i tirmizî",
+"hakim tirmizi",
+"hatmü'l-evliyâ"
+],
+"ar": [
+"الحارث المحاسبي",
+"السهروردي",
+"عوارف المعارف",
+"أبو طالب المكي",
+"قوت القلوب",
+"السراج الطوسي",
+"اللمع في التصوف",
+"السلمي",
+"طبقات الصوفية",
+"الكلاباذي",
+"التعرف لمذهب أهل التصوف",
+"الحكيم الترمذي",
+"ختم الأولياء"
+],
+"en": [
+"al-muhasibi",
+"suhrawardi",
+"qut al-qulub",
+"tabaqat al-sufiyya"
+],
+"w": 1.3
+},
+{
+"id": "ibn_kayyim_teymiyye",
+"alan": "tasavvuf",
+"tr": [
+"ibn kayyim",
+"ibnü'l-kayyim",
+"ibn kayyım",
+"medâricü's-sâlikîn",
+"medaricüs salikin",
+"ibn teymiyye",
+"ibn teymiye",
+"ibn teymiyye'nin"
+],
+"ar": [
+"ابن القيم",
+"مدارج السالكين",
+"ابن تيمية",
+"الفوائد",
+"الوابل الصيب"
+],
+"en": [
+"ibn qayyim",
+"ibn taymiyya",
+"madarij al-salikin"
+],
+"w": 1.0
+},
+{
+"id": "serhendi_halid",
+"alan": "tasavvuf",
+"tr": [
+"imam-ı rabbânî",
+"imam-i rabbani",
+"ahmed serhendî",
+"müceddid-i elf-i sânî",
+"müceddid-i elfi sani",
+"mektûbât",
+"mektubat",
+"halid-i bağdadi",
+"mevlânâ hâlid",
+"şa'rânî",
+"sarani",
+"zerrûk",
+"ahmed zerrûk",
+"nablusî",
+"nablusi",
+"abdülganî en-nablusî",
+"gümüşhânevî",
+"gümüşhanevi"
+],
+"ar": [
+"أحمد السرهندي",
+"مجدد الألف الثاني",
+"خالد البغدادي",
+"الشعراني",
+"أحمد زروق",
+"عبد الغني النابلسي",
+"الحديقة الندية",
+"الطبقات الكبرى للشعراني"
+],
+"en": [
+"ahmad sirhindi",
+"shaarani"
+],
+"w": 1.3
+},
+{
+"id": "hadis",
+"alan": "hadis",
+"tr": [
+"hadis",
+"hadîs",
+"hadisler",
+"hadisin",
+"hadîs-i şerîf",
+"hadis-i şerif"
+],
+"ar": [
+"الحديث",
+"الحديث النبوي",
+"علم الحديث",
+"الأحاديث النبوية"
+],
+"en": [
+"hadith",
+"prophetic tradition"
+],
+"w": 1.0
+},
+{
+"id": "sunnet_hucciyet",
+"alan": "hadis",
+"tr": [
+"sünnetin delil",
+"sünnetin yeri",
+"sünnetin hüccet",
+"sünnet delil",
+"sünnetin İslâm",
+"sünnetin islam",
+"sünnet-i seniyye",
+"sünnetin önemi",
+"sünnet neden"
+],
+"ar": [
+"حجية السنة",
+"مكانة السنة",
+"السنة النبوية ومكانتها",
+"السنة في التشريع",
+"السنة المصدر الثاني للتشريع"
+],
+"en": [
+"authority of the sunnah"
+],
+"w": 1.7
+},
+{
+"id": "sunnet",
+"alan": "hadis",
+"tr": [
+"sünnet",
+"sunnet",
+"sünnetler"
+],
+"ar": [
+"السنة",
+"السنة النبوية"
+],
+"en": [
+"sunnah"
+],
+"w": 0.8
+},
+{
+"id": "hadis_cesitleri",
+"alan": "hadis",
+"tr": [
+"hadis çeşit",
+"hadis türleri",
+"hadislerin çeşit",
+"sahih hasen zayıf",
+"sahîh hasen",
+"hadis kısım",
+"hadis tasnif",
+"hadis tür",
+"sahîh ile hasen",
+"sahih ile hasen"
+],
+"ar": [
+"أقسام الحديث",
+"الصحيح والحسن والضعيف",
+"أنواع الحديث",
+"تقسيم الحديث"
+],
+"en": [
+"types of hadith",
+"sahih hasan daif"
+],
+"w": 1.8
+},
+{
+"id": "sahih_hadis",
+"alan": "hadis",
+"tr": [
+"sahîh hadis",
+"sahih hadis",
+"sahîh",
+"sahih",
+"hadis-i sahîh"
+],
+"ar": [
+"الحديث الصحيح",
+"الصحيح",
+"شروط الحديث الصحيح"
+],
+"en": [
+"authentic hadith"
+],
+"w": 1.1
+},
+{
+"id": "hasen_hadis",
+"alan": "hadis",
+"tr": [
+"hasen hadis",
+"hasen",
+"hadis-i hasen",
+"hasen li-zâtihî",
+"hasen li-gayrihî"
+],
+"ar": [
+"الحديث الحسن",
+"الحسن",
+"الحسن لذاته"
+],
+"en": [
+"hasan hadith"
+],
+"w": 1.1
+},
+{
+"id": "zayif_hadis",
+"alan": "hadis",
+"tr": [
+"zayıf hadis",
+"zayif hadis",
+"da'îf",
+"daif hadis",
+"zayıf",
+"hadis-i zayıf",
+"zayıf hadisle amel"
+],
+"ar": [
+"الحديث الضعيف",
+"الضعيف",
+"العمل بالحديث الضعيف"
+],
+"en": [
+"weak hadith",
+"daif"
+],
+"w": 1.1
+},
+{
+"id": "mevzu_hadis",
+"alan": "hadis",
+"tr": [
+"mevzû",
+"mevzu",
+"uydurma hadis",
+"mevzû hadis",
+"hadis uydur",
+"hadis tazminat",
+"vaz'"
+],
+"ar": [
+"الحديث الموضوع",
+"الموضوعات",
+"الوضع في الحديث",
+"الوضاعون"
+],
+"en": [
+"fabricated hadith",
+"mawdu"
+],
+"w": 1.6
+},
+{
+"id": "isnad",
+"alan": "hadis",
+"tr": [
+"isnad",
+"isnâd",
+"senet",
+"sened",
+"rivayet zinciri",
+"senetsiz"
+],
+"ar": [
+"الإسناد",
+"السند",
+"أهمية الإسناد",
+"الإسناد من الدين"
+],
+"en": [
+"isnad",
+"chain of transmission"
+],
+"w": 1.4
+},
+{
+"id": "ravi",
+"alan": "hadis",
+"tr": [
+"râvî",
+"ravi",
+"râvi",
+"ravîler",
+"râvîler",
+"râvinin"
+],
+"ar": [
+"الراوي",
+"الرواة",
+"شروط الراوي"
+],
+"en": [
+"narrator",
+"rawi"
+],
+"w": 1.0
+},
+{
+"id": "cerh_tadil",
+"alan": "hadis",
+"tr": [
+"cerh",
+"ta'dîl",
+"ta'dil",
+"tadil",
+"cerh ve ta'dîl",
+"cerh ve tadil",
+"cerh-ta'dil"
+],
+"ar": [
+"الجرح والتعديل",
+"علم الجرح والتعديل",
+"الجرح",
+"التعديل"
+],
+"en": [
+"criticism and validation of narrators",
+"jarh wa tadil"
+],
+"w": 1.8
+},
+{
+"id": "mutevatir_ahad",
+"alan": "hadis",
+"tr": [
+"mütevâtir",
+"mütevatir",
+"âhâd",
+"ahad haber",
+"haber-i vâhid",
+"haber-i vahid",
+"garîb hadis",
+"azîz",
+"meşhûr hadis"
+],
+"ar": [
+"المتواتر",
+"خبر الآحاد",
+"الحديث المتواتر",
+"الغريب",
+"المشهور"
+],
+"en": [
+"mutawatir",
+"ahad hadith"
+],
+"w": 1.0
+},
+{
+"id": "mursel_munkati",
+"alan": "hadis",
+"tr": [
+"mürsel",
+"munkatı",
+"muallak",
+"müdellis",
+"tedlis",
+"müdrec"
+],
+"ar": [
+"المرسل",
+"المنقطع",
+"المعلق",
+"التدليس",
+"المدرج"
+],
+"en": [
+"mursal",
+"tadlis"
+],
+"w": 1.0
+},
+{
+"id": "hadis_kudsi",
+"alan": "hadis",
+"tr": [
+"hadis-i kudsî",
+"hadis-i kudsi",
+"kudsî hadis",
+"kudsi hadis",
+"hadis kudsi",
+"kudsî",
+"kudsi"
+],
+"ar": [
+"الحديث القدسي",
+"الأحاديث القدسية",
+"الفرق بين الحديث القدسي والقرآن"
+],
+"en": [
+"hadith qudsi",
+"divine hadith"
+],
+"w": 1.7
+},
+{
+"id": "rivayet",
+"alan": "hadis",
+"tr": [
+"rivayet",
+"rivâyet",
+"rivayet eden",
+"rivayet etti"
+],
+"ar": [
+"الرواية",
+"رواية الحديث",
+"الرواية بالمعنى"
+],
+"en": [
+"narration"
+],
+"w": 0.8
+},
+{
+"id": "kutub_sitte",
+"alan": "hadis",
+"tr": [
+"kütüb-i sitte",
+"kutub-ı sitte",
+"kütübü sitte",
+"altı kitap",
+"kütüb-i sitte nedir",
+"kutubi sitte",
+"kütübi sitte"
+],
+"ar": [
+"الكتب الستة",
+"الصحاح الستة",
+"الأصول الستة"
+],
+"en": [
+"the six books",
+"kutub al-sitta"
+],
+"w": 1.8
+},
+{
+"id": "buhari",
+"alan": "hadis",
+"tr": [
+"buhârî",
+"buhari",
+"sahîh-i buhârî",
+"sahih-i buhari",
+"imam buhârî",
+"imam buhari",
+"muhammed b. ismâîl",
+"el-câmiu's-sahîh"
+],
+"ar": [
+"البخاري",
+"صحيح البخاري",
+"الجامع المسند الصحيح",
+"الإمام البخاري",
+"محمد بن إسماعيل البخاري"
+],
+"en": [
+"bukhari",
+"sahih al-bukhari"
+],
+"w": 1.6
+},
+{
+"id": "muslim",
+"alan": "hadis",
+"tr": [
+"müslim",
+"muslim",
+"sahîh-i müslim",
+"sahih-i muslim",
+"imam müslim",
+"müslim b. haccâc"
+],
+"ar": [
+"مسلم",
+"صحيح مسلم",
+"الإمام مسلم",
+"مسلم بن الحجاج"
+],
+"en": [
+"muslim",
+"sahih muslim"
+],
+"w": 1.4
+},
+{
+"id": "sunen_sahipleri",
+"alan": "hadis",
+"tr": [
+"tirmizî",
+"tirmizi",
+"ebû dâvûd",
+"ebu davud",
+"ebû davud",
+"nesâî",
+"nesai",
+"ibn mâce",
+"ibn mace",
+"dârimî",
+"darimi",
+"ibn hibbân",
+"hâkim"
+],
+"ar": [
+"الترمذي",
+"أبو داود",
+"النسائي",
+"ابن ماجه",
+"الدارمي",
+"ابن حبان",
+"الحاكم",
+"السنن الأربعة"
+],
+"en": [
+"tirmidhi",
+"abu dawud",
+"nasai",
+"ibn majah"
+],
+"w": 1.2
+},
+{
+"id": "muvatta_musned",
+"alan": "hadis",
+"tr": [
+"muvatta",
+"muvattâ",
+"müsned",
+"musned",
+"müsned-i ahmed",
+"imam mâlik muvatta",
+"musannef",
+"mustedrek",
+"mu'cem",
+"mucem"
+],
+"ar": [
+"الموطأ",
+"المسند",
+"مسند أحمد",
+"المصنف",
+"المستدرك",
+"المعجم"
+],
+"en": [
+"muwatta",
+"musnad"
+],
+"w": 1.0
+},
+{
+"id": "nevevi",
+"alan": "hadis",
+"tr": [
+"nevevî",
+"nevevi",
+"imam nevevî",
+"imam nevevi",
+"yahyâ b. şeref",
+"minhâc",
+"el-mecmû'"
+],
+"ar": [
+"النووي",
+"الإمام النووي",
+"شرح النووي على مسلم",
+"المجموع"
+],
+"en": [
+"al-nawawi",
+"nawawi"
+],
+"w": 1.3
+},
+{
+"id": "erbain",
+"alan": "hadis",
+"tr": [
+"erbaîn",
+"erbain",
+"kırk hadis",
+"kırk hadîs",
+"erba'în"
+],
+"ar": [
+"الأربعين",
+"الأربعين النووية",
+"أربعين حديثا",
+"من حفظ على أمتي أربعين حديثا"
+],
+"en": [
+"forty hadith",
+"arbain"
+],
+"w": 1.7
+},
+{
+"id": "riyazus_salihin",
+"alan": "hadis",
+"tr": [
+"riyâzü's-sâlihîn",
+"riyazus salihin",
+"riyâzüs-sâlihîn",
+"riyaz-ı salihin",
+"riyâzü's-sâlihîn"
+],
+"ar": [
+"رياض الصالحين",
+"رياض الصالحين للنووي"
+],
+"en": [
+"riyad as-salihin"
+],
+"w": 1.0
+},
+{
+"id": "ibn_hacer_fethul_bari",
+"alan": "hadis",
+"tr": [
+"ibn hacer",
+"fethu'l-bârî",
+"fethul bari",
+"askalânî",
+"askalani",
+"eserin şerhi",
+"buhârî şerhi",
+"buhari şerhi"
+],
+"ar": [
+"ابن حجر العسقلاني",
+"فتح الباري",
+"فتح الباري شرح صحيح البخاري",
+"العسقلاني"
+],
+"en": [
+"ibn hajar",
+"fath al-bari"
+],
+"w": 1.0
+},
+{
+"id": "niyet",
+"alan": "hadis",
+"tr": [
+"niyet",
+"niyetler",
+"niyete göre",
+"ameller niyetlere",
+"inneme'l-a'mâlü",
+"innemel amalu"
+],
+"ar": [
+"النية",
+"إنما الأعمال بالنيات",
+"حديث النية",
+"الأعمال بالنيات"
+],
+"en": [
+"intention",
+"actions are by intentions"
+],
+"w": 1.2
+},
+{
+"id": "ameller_niyetlere",
+"alan": "hadis",
+"tr": [
+"ameller niyetlere",
+"ameller niyetlere göredir",
+"niyet hadisi",
+"inneme'l-a'mal",
+"niyetlere göre"
+],
+"ar": [
+"إنما الأعمال بالنيات",
+"حديث إنما الأعمال بالنيات",
+"الأعمال بالنيات وإنما لكل امرئ ما نوى"
+],
+"en": [
+"actions are judged by intentions"
+],
+"w": 1.8
+},
+{
+"id": "tahric_sened",
+"alan": "hadis",
+"tr": [
+"tahric",
+"tahrîc",
+"hadis tahric",
+"senedi",
+"hadisin kaynağı",
+"hadis kaynağı",
+"hadisin tahrici"
+],
+"ar": [
+"التخريج",
+"تخريج الحديث",
+"تخريج الأحاديث"
+],
+"en": [
+"takhrij"
+],
+"w": 1.0
+},
+{
+"id": "hadis_usulu",
+"alan": "hadis",
+"tr": [
+"hadis usûlü",
+"hadis usulü",
+"mustalah",
+"mustalahu'l-hadis",
+"hadis ilimleri",
+"hadis ilmi",
+"musatalah",
+"ulûmu'l-hadîs",
+"hadis terim"
+],
+"ar": [
+"مصطلح الحديث",
+"علوم الحديث",
+"علم مصطلح الحديث",
+"أصول الحديث"
+],
+"en": [
+"hadith terminology",
+"hadith sciences"
+],
+"w": 1.3
+},
+{
+"id": "kuran",
+"alan": "tefsir",
+"tr": [
+"kur'ân",
+"kuran",
+"kur'an",
+"kur’an",
+"kur’ân",
+"kur'an-ı kerîm",
+"kuranı kerim",
+"mushaf"
+],
+"ar": [
+"القرآن",
+"القرآن الكريم",
+"المصحف"
+],
+"en": [
+"quran",
+"koran"
+],
+"w": 0.9
+},
+{
+"id": "tefsir",
+"alan": "tefsir",
+"tr": [
+"tefsir",
+"müfessir",
+"müfessirler",
+"tefsîr"
+],
+"ar": [
+"التفسير",
+"المفسرون",
+"علم التفسير",
+"تفسير القرآن"
+],
+"en": [
+"tafsir",
+"quranic exegesis"
+],
+"w": 1.2
+},
+{
+"id": "tefsir_cesit",
+"alan": "tefsir",
+"tr": [
+"tefsirde rivayet",
+"rivayet tefsir",
+"me'sûr tefsir",
+"mesur tefsir",
+"dirayet",
+"re'y ile tefsir",
+"rey ile tefsir",
+"rivayet ve dirayet",
+"rivayet tefsiri",
+"dirayet tefsiri",
+"dirayet usulü",
+"rivayet usulü",
+"tefsir usul",
+"tefsir yöntem",
+"tefsir çeşit",
+"tefsir ekol"
+],
+"ar": [
+"التفسير بالمأثور",
+"التفسير بالرأي",
+"التفسير بالرواية والدراية",
+"مناهج المفسرين",
+"أنواع التفسير",
+"التفسير بالدراية"
+],
+"en": [
+"tafsir bi-l-riwaya and bi-l-diraya"
+],
+"w": 1.9
+},
+{
+"id": "tevil",
+"alan": "tefsir",
+"tr": [
+"tevil",
+"te'vil",
+"te’vil",
+"tevîl"
+],
+"ar": [
+"التأويل",
+"الفرق بين التفسير والتأويل"
+],
+"en": [
+"tawil"
+],
+"w": 1.0
+},
+{
+"id": "meal",
+"alan": "tefsir",
+"tr": [
+"meal",
+"mealler",
+"kur'an meali",
+"tercüme kuran",
+"kur'an tercüme"
+],
+"ar": [
+"ترجمة القرآن",
+"معاني القرآن",
+"معاني القرآن الكريم"
+],
+"en": [
+"translation of meanings"
+],
+"w": 1.0
+},
+{
+"id": "sebeb_nuzul",
+"alan": "tefsir",
+"tr": [
+"sebeb-i nüzûl",
+"sebeb-i nuzul",
+"nüzul sebebi",
+"sebebi nüzul",
+"sebeb-i nüzul",
+"sebeb i nüzul",
+"nüzûl sebebi",
+"sebebü'n-nüzûl",
+"ayetin iniş sebebi",
+"iniş sebebi",
+"nüzul",
+"nüzûl"
+],
+"ar": [
+"أسباب النزول",
+"سبب النزول",
+"أسباب نزول الآيات",
+"معرفة سبب النزول"
+],
+"en": [
+"occasions of revelation",
+"asbab al-nuzul"
+],
+"w": 1.8
+},
+{
+"id": "nasih_mensuh",
+"alan": "tefsir",
+"tr": [
+"nâsih",
+"nasih",
+"mensûh",
+"mensuh",
+"nesih",
+"nâsih ve mensûh",
+"nasih ve mensuh",
+"nâsih-mensûh",
+"neshedilen",
+"neshi"
+],
+"ar": [
+"الناسخ والمنسوخ",
+"النسخ",
+"النسخ في القرآن",
+"الناسخ",
+"المنسوخ"
+],
+"en": [
+"abrogation",
+"naskh"
+],
+"w": 1.8
+},
+{
+"id": "muhkem_muteshabih",
+"alan": "tefsir",
+"tr": [
+"muhkem",
+"müteşâbih",
+"müteşabih",
+"muhkem ve müteşabih",
+"muhkem ve müteşâbih",
+"muhkemat",
+"müteşabihat",
+"müteşâbihât"
+],
+"ar": [
+"المحكم والمتشابه",
+"المحكم",
+"المتشابه",
+"آيات المتشابهات",
+"آل عمران آية ٧"
+],
+"en": [
+"muhkam and mutashabih",
+"clear and ambiguous verses"
+],
+"w": 1.8
+},
+{
+"id": "mekki_medeni",
+"alan": "tefsir",
+"tr": [
+"mekkî sûre",
+"medenî sûre",
+"mekki sure",
+"medeni sure",
+"mekkî ve medenî",
+"mekkî sure",
+"medenî sure",
+"mekki ve medeni",
+"mekke dönemi sure",
+"medine dönemi sure"
+],
+"ar": [
+"المكي والمدني",
+"السور المكية والمدنية",
+"السور المكية",
+"السور المدنية"
+],
+"en": [
+"meccan and medinan"
+],
+"w": 1.2
+},
+{
+"id": "ayet",
+"alan": "tefsir",
+"tr": [
+"ayet",
+"âyet",
+"ayetler",
+"âyetler",
+"ayetin",
+"âyetin"
+],
+"ar": [
+"الآية",
+"الآيات",
+"آيات القرآن"
+],
+"en": [
+"verse",
+"ayah"
+],
+"w": 0.7
+},
+{
+"id": "sure",
+"alan": "tefsir",
+"tr": [
+"sûre",
+"sure",
+"sureler",
+"sûreler",
+"suresi",
+"sûresi"
+],
+"ar": [
+"السورة",
+"سور القرآن",
+"سورة"
+],
+"en": [
+"surah",
+"chapter"
+],
+"w": 0.7
+},
+{
+"id": "fatiha",
+"alan": "tefsir",
+"tr": [
+"fâtiha",
+"fatiha",
+"fâtihâ",
+"fatihâ",
+"fâtiha sûresi",
+"fatiha suresi",
+"ümmü'l-kitâb",
+"seb'ü'l-mesânî",
+"elhamdülillah suresi"
+],
+"ar": [
+"سورة الفاتحة",
+"الفاتحة",
+"أم الكتاب",
+"السبع المثاني",
+"تفسير الفاتحة"
+],
+"en": [
+"al-fatiha",
+"the opening"
+],
+"w": 1.6
+},
+{
+"id": "ayetel_kursi",
+"alan": "tefsir",
+"tr": [
+"âyetü'l-kürsî",
+"ayetel kursi",
+"ayetü'l-kürsi",
+"ayet-el kürsi",
+"ayet el kürsi",
+"âyete'l-kürsî",
+"ayetül kürsi",
+"ayetel kürsi",
+"ayet-i kürsî",
+"ayet-i kürsi",
+"kürsî",
+"kursi",
+"kürsi"
+],
+"ar": [
+"آية الكرسي",
+"تفسير آية الكرسي",
+"فضل آية الكرسي",
+"الله لا إله إلا هو الحي القيوم"
+],
+"en": [
+"ayat al-kursi",
+"throne verse"
+],
+"w": 1.8
+},
+{
+"id": "ihlas_suresi",
+"alan": "tefsir",
+"tr": [
+"ihlâs sûresi",
+"ihlas suresi",
+"ihlas sûresi",
+"kul hüvallâhü",
+"kul huvallahu ehad",
+"samed",
+"ihlâs sûresinin"
+],
+"ar": [
+"سورة الإخلاص",
+"قل هو الله أحد",
+"الله الصمد",
+"تفسير سورة الإخلاص"
+],
+"en": [
+"surah al-ikhlas",
+"sincerity chapter"
+],
+"w": 1.8
+},
+{
+"id": "yasin_bakara",
+"alan": "tefsir",
+"tr": [
+"yâsîn",
+"yasin",
+"bakara sûresi",
+"bakara suresi",
+"âl-i imrân",
+"ali imran",
+"nisâ sûresi",
+"nisa suresi",
+"kehf sûresi",
+"kehf suresi",
+"mülk sûresi",
+"mülk suresi"
+],
+"ar": [
+"سورة يس",
+"سورة البقرة",
+"سورة آل عمران",
+"سورة النساء",
+"سورة الكهف",
+"سورة الملك"
+],
+"en": [
+"surah yasin",
+"surah baqarah"
+],
+"w": 1.0
+},
+{
+"id": "ilk_inen_ayet",
+"alan": "tefsir",
+"tr": [
+"ilk inen",
+"ilk nâzil",
+"ilk nazil",
+"ilk vahiy",
+"ilk inen ayet",
+"ilk inen âyet",
+"ilk gelen vahiy",
+"ilk gelen âyet",
+"alak sûresi",
+"alak suresi",
+"iqra",
+"ikra",
+"oku",
+"hira mağara",
+"hira"
+],
+"ar": [
+"أول ما نزل من القرآن",
+"سورة العلق",
+"اقرأ باسم ربك",
+"غار حراء",
+"بدء الوحي"
+],
+"en": [
+"first revelation",
+"iqra",
+"cave of hira"
+],
+"w": 1.8
+},
+{
+"id": "kuran_cem",
+"alan": "tefsir",
+"tr": [
+"kur'ân'ın toplan",
+"kuran'ın toplan",
+"kur'an'ın toplan",
+"kur'ân'ın cem",
+"kuran cem",
+"kur'an cem",
+"kur'ân'ın mushaf",
+"kur'an mushaf",
+"mushaf hâline",
+"mushaf hale",
+"mushaf halin",
+"mushaf nasıl",
+"mushafın",
+"tek mushaf",
+"zeyd b. sâbit",
+"zeyd bin sabit",
+"osman mushaf",
+"kur'ân'ın yazıya",
+"kur'an'ın yazıya",
+"kur'an nasıl toplan",
+"kur'ân nasıl toplan",
+"cem' tarih"
+],
+"ar": [
+"جمع القرآن",
+"جمع القرآن في عهد أبي بكر",
+"جمع عثمان",
+"المصحف العثماني",
+"زيد بن ثابت",
+"جمع القرآن الكريم"
+],
+"en": [
+"compilation of the quran",
+"uthmanic codex"
+],
+"w": 1.9
+},
+{
+"id": "kuran_sayi",
+"alan": "tefsir",
+"tr": [
+"kaç cüz",
+"kaç ayet",
+"kaç sure",
+"kaç sûre",
+"ayet sayısı",
+"ayetten oluş",
+"cüzden oluş",
+"sûreden oluş",
+"kur'ân kaç",
+"kuran kaç",
+"kur'an kaç"
+],
+"ar": [
+"عدد آيات القرآن",
+"عدد سور القرآن",
+"أجزاء القرآن",
+"عدد أجزاء القرآن",
+"عدد السور والآيات"
+],
+"en": [
+"number of verses",
+"number of surahs",
+"juz"
+],
+"w": 1.8
+},
+{
+"id": "vahiy",
+"alan": "tefsir",
+"tr": [
+"vahiy",
+"vahy",
+"vahiy melek",
+"vahyin"
+],
+"ar": [
+"الوحي",
+"نزول الوحي",
+"كيفية نزول الوحي"
+],
+"en": [
+"revelation",
+"wahy"
+],
+"w": 1.0
+},
+{
+"id": "icaz",
+"alan": "tefsir",
+"tr": [
+"i'câz",
+"icaz",
+"kur'ân'ın mucize",
+"kuran'ın mucize",
+"kur'an mucize",
+"kur'ân mucizev",
+"belâğat mucize"
+],
+"ar": [
+"إعجاز القرآن",
+"الإعجاز",
+"وجوه إعجاز القرآن"
+],
+"en": [
+"inimitability of the quran",
+"ijaz"
+],
+"w": 1.0
+},
+{
+"id": "kiraat_tecvid",
+"alan": "tefsir",
+"tr": [
+"kırâat",
+"kiraat",
+"kırâat-ı seb'a",
+"kıraat",
+"tecvid",
+"tecvîd",
+"tilavet",
+"makhrec",
+"mahrec",
+"kur'an okuma kural",
+"ahruf-ı seb'a",
+"yedi harf",
+"yedi lehçe"
+],
+"ar": [
+"القراءات",
+"القراءات السبع",
+"التجويد",
+"الأحرف السبعة",
+"تلاوة القرآن",
+"مخارج الحروف"
+],
+"en": [
+"qiraat",
+"tajwid",
+"seven readings"
+],
+"w": 1.2
+},
+{
+"id": "kissa_enbiya",
+"alan": "kissa",
+"tr": [
+"kıssa",
+"kıssası",
+"kıssalar",
+"kısas-ı enbiyâ",
+"kısas-ı enbiya",
+"kıssa-i enbiyâ",
+"peygamber kıssaları",
+"peygamberler tarihi",
+"enbiyâ kıssa"
+],
+"ar": [
+"قصص الأنبياء",
+"القصة القرآنية",
+"قصص القرآن"
+],
+"en": [
+"stories of the prophets"
+],
+"w": 1.2
+},
+{
+"id": "adem",
+"alan": "kissa",
+"tr": [
+"âdem$",
+"adem aleyhisselam",
+"hz. âdem",
+"hz. adem",
+"ilk insan",
+"âdem'in yarat",
+"ademin yarat",
+"adem'in yarat",
+"ilk peygamber",
+"âdem'in",
+"adem'in"
+],
+"ar": [
+"آدم",
+"خلق آدم",
+"قصة آدم",
+"أبو البشر",
+"آدم عليه السلام"
+],
+"en": [
+"adam",
+"creation of adam"
+],
+"w": 1.6
+},
+{
+"id": "havva_iblis",
+"alan": "kissa",
+"tr": [
+"havvâ",
+"havva",
+"iblis",
+"cennetten çıkar",
+"cennetten kovul",
+"yasak ağaç",
+"yasak meyve",
+"secde etmedi"
+],
+"ar": [
+"حواء",
+"إبليس",
+"الشجرة المنهي عنها",
+"السجود لآدم",
+"الإخراج من الجنة"
+],
+"en": [
+"eve",
+"iblis",
+"forbidden tree"
+],
+"w": 1.0
+},
+{
+"id": "kabil_habil",
+"alan": "kissa",
+"tr": [
+"kâbîl",
+"hâbîl",
+"habil",
+"kabil",
+"ilk cinayet",
+"âdem'in oğul",
+"ademin oğul"
+],
+"ar": [
+"هابيل وقابيل",
+"ابنا آدم",
+"قصة ابني آدم",
+"أول جريمة قتل"
+],
+"en": [
+"cain and abel"
+],
+"w": 1.0
+},
+{
+"id": "nuh_tufan",
+"alan": "kissa",
+"tr": [
+"nûh",
+"nuh peygamber",
+"hz. nûh",
+"hz. nuh",
+"tufan",
+"tûfan",
+"nuh'un gemi",
+"nuh tufan",
+"nuh'un tufan",
+"nuhun gemi",
+"tufanı",
+"gemi yap"
+],
+"ar": [
+"نوح",
+"قصة نوح",
+"الطوفان",
+"سفينة نوح",
+"نوح عليه السلام"
+],
+"en": [
+"noah",
+"the flood",
+"noahs ark"
+],
+"w": 1.7
+},
+{
+"id": "ibrahim",
+"alan": "kissa",
+"tr": [
+"ibrâhîm",
+"ibrahim",
+"hz. ibrâhîm",
+"hz. ibrahim",
+"halîlullah",
+"halilullah",
+"ibrahim aleyhisselam",
+"hz. ibrahim"
+],
+"ar": [
+"إبراهيم",
+"قصة إبراهيم",
+"الخليل",
+"إبراهيم عليه السلام",
+"خليل الله"
+],
+"en": [
+"abraham",
+"ibrahim"
+],
+"w": 1.5
+},
+{
+"id": "nemrut",
+"alan": "kissa",
+"tr": [
+"nemrut",
+"nemrud",
+"ateşe at",
+"ateşe atıl",
+"ateş serin",
+"gülistan",
+"put kır"
+],
+"ar": [
+"النمرود",
+"نار إبراهيم",
+"يا نار كوني بردا وسلاما",
+"تحطيم الأصنام",
+"قصة إبراهيم والنمرود"
+],
+"en": [
+"nimrod",
+"abraham and the fire"
+],
+"w": 1.7
+},
+{
+"id": "ismail_ishak",
+"alan": "kissa",
+"tr": [
+"ismâil",
+"ismail peygamber",
+"hz. ismâil",
+"kurbanlık",
+"zebîh",
+"ishâk",
+"ishak peygamber",
+"hacer",
+"hâcer",
+"zemzem"
+],
+"ar": [
+"إسماعيل",
+"الذبيح",
+"إسحاق",
+"هاجر",
+"زمزم",
+"قصة الذبيح"
+],
+"en": [
+"ishmael",
+"isaac",
+"hagar",
+"zamzam"
+],
+"w": 1.0
+},
+{
+"id": "yakub_yusuf",
+"alan": "kissa",
+"tr": [
+"yûsuf",
+"yusuf peygamber",
+"hz. yûsuf",
+"hz. yusuf",
+"yusuf kıssa",
+"yûsuf kıssa",
+"yakûb",
+"yakub peygamber",
+"zeliha",
+"züleyha",
+"zuleyha",
+"aziz-i mısır",
+"yusuf'u kuyu",
+"kuyuya at",
+"kardeşleri yusuf",
+"yusuf aleyhisselam"
+],
+"ar": [
+"يوسف",
+"قصة يوسف",
+"يعقوب",
+"امرأة العزيز",
+"الجب",
+"إخوة يوسف",
+"يوسف عليه السلام",
+"سورة يوسف"
+],
+"en": [
+"joseph",
+"story of joseph",
+"jacob",
+"yusuf"
+],
+"w": 1.8
+},
+{
+"id": "eyyub",
+"alan": "kissa",
+"tr": [
+"eyyûb",
+"eyyub peygamber",
+"hz. eyyûb",
+"eyyub'un sabr",
+"eyyub aleyhisselam",
+"eyyup"
+],
+"ar": [
+"أيوب",
+"صبر أيوب",
+"قصة أيوب"
+],
+"en": [
+"job",
+"ayyub"
+],
+"w": 1.0
+},
+{
+"id": "musa_firavun",
+"alan": "kissa",
+"tr": [
+"mûsâ",
+"musa peygamber",
+"hz. mûsâ",
+"hz. musa",
+"firavun",
+"musa aleyhisselam",
+"asâ-yı mûsâ",
+"asa-yı musa",
+"nil nehri",
+"deniz yarıl",
+"denizi yar",
+"beni israil",
+"benî isrâil",
+"israiloğul",
+"tûr-ı sînâ",
+"tur-i sina",
+"tevrat"
+],
+"ar": [
+"موسى",
+"قصة موسى",
+"فرعون",
+"بنو إسرائيل",
+"شق البحر",
+"عصا موسى",
+"موسى عليه السلام",
+"فرعون وموسى"
+],
+"en": [
+"moses",
+"pharaoh",
+"children of israel",
+"musa"
+],
+"w": 1.8
+},
+{
+"id": "harun_hizir_karun",
+"alan": "kissa",
+"tr": [
+"hârûn",
+"harun peygamber",
+"hızır",
+"hızır aleyhisselam",
+"hz. hızır",
+"kârûn",
+"karun",
+"bel'am",
+"samiri",
+"sâmirî",
+"buzağı",
+"altın buzağı"
+],
+"ar": [
+"هارون",
+"الخضر",
+"قارون",
+"السامري",
+"العجل",
+"موسى والخضر"
+],
+"en": [
+"aaron",
+"khidr",
+"qarun"
+],
+"w": 1.0
+},
+{
+"id": "davud_suleyman",
+"alan": "kissa",
+"tr": [
+"dâvûd",
+"davud peygamber",
+"hz. dâvûd",
+"hz. davud",
+"belkıs",
+"bilkıs",
+"hüdhüd",
+"hüthüt",
+"karınca vadisi",
+"zebûr",
+"tâlût",
+"talut",
+"câlût",
+"calut",
+"süleyman peygamber",
+"hz. süleyman",
+"hz. süleymân",
+"süleyman aleyhisselam"
+],
+"ar": [
+"داود",
+"سليمان",
+"بلقيس",
+"ملكة سبأ",
+"الهدهد",
+"وادي النمل",
+"طالوت",
+"جالوت",
+"سليمان عليه السلام"
+],
+"en": [
+"david",
+"solomon",
+"queen of sheba",
+"goliath"
+],
+"w": 1.4
+},
+{
+"id": "yunus",
+"alan": "kissa",
+"tr": [
+"yunus peygamber",
+"hz. yûnus",
+"hz. yunus",
+"balığın karn",
+"balık",
+"zünnûn",
+"zunnun",
+"nineve",
+"ninova",
+"yûnus aleyhisselam"
+],
+"ar": [
+"يونس",
+"ذو النون",
+"الحوت",
+"قصة يونس",
+"نينوى",
+"لا إله إلا أنت سبحانك"
+],
+"en": [
+"jonah",
+"yunus",
+"the whale"
+],
+"w": 1.7
+},
+{
+"id": "zekeriyya_yahya",
+"alan": "kissa",
+"tr": [
+"zekeriyyâ",
+"zekeriyya",
+"yahyâ",
+"yahya peygamber",
+"hz. yahyâ",
+"yahya aleyhisselam"
+],
+"ar": [
+"زكريا",
+"يحيى",
+"قصة زكريا ويحيى"
+],
+"en": [
+"zechariah",
+"john the baptist"
+],
+"w": 1.0
+},
+{
+"id": "isa_meryem",
+"alan": "kissa",
+"tr": [
+"îsâ",
+"isa peygamber",
+"hz. îsâ",
+"hz. isa",
+"meryem",
+"hz. meryem",
+"îsâ'nın doğ",
+"isa'nın doğ",
+"isanın doğ",
+"isa aleyhisselam",
+"mesih",
+"mesîh",
+"hurma ağacı",
+"babasız",
+"havâriler",
+"hâvârîler",
+"beşikte konuş",
+"yedi uyur"
+],
+"ar": [
+"عيسى",
+"مريم",
+"قصة مريم",
+"ولادة عيسى",
+"المسيح",
+"الحواريون",
+"عيسى ابن مريم",
+"عيسى عليه السلام"
+],
+"en": [
+"jesus",
+"mary",
+"isa",
+"maryam"
+],
+"w": 1.8
+},
+{
+"id": "lut_salih_hud_suayb",
+"alan": "kissa",
+"tr": [
+"lût",
+"lut peygamber",
+"lût kavmi",
+"sâlih peygamber",
+"salih peygamber",
+"semûd",
+"semud",
+"nâka",
+"hûd peygamber",
+"hud peygamber",
+"âd kavmi",
+"ad kavmi",
+"şuayb",
+"şuayb peygamber",
+"medyen",
+"eshâb-ı eyke",
+"ashab-ı eyke",
+"idris",
+"idrîs",
+"zülkifl",
+"zülkifil",
+"ilyas",
+"elyesa"
+],
+"ar": [
+"لوط",
+"صالح",
+"ثمود",
+"الناقة",
+"هود",
+"عاد",
+"شعيب",
+"مدين",
+"إدريس",
+"ذو الكفل",
+"إلياس",
+"قوم لوط"
+],
+"en": [
+"lot",
+"salih",
+"thamud",
+"hud",
+"ad",
+"shuayb",
+"midian",
+"idris"
+],
+"w": 1.3
+},
+{
+"id": "ashab_kehf",
+"alan": "kissa",
+"tr": [
+"ashâb-ı kehf",
+"ashab-ı kehf",
+"ashabı kehf",
+"ashâb-ı kehf kıssa",
+"yedi uyurlar",
+"mağara arkadaş",
+"kehf ehli",
+"kehf sûresi",
+"kehf suresi",
+"köpek kıtmîr",
+"kıtmir",
+"üç yüz dokuz yıl",
+"309 yıl"
+],
+"ar": [
+"أصحاب الكهف",
+"سورة الكهف",
+"الفتية",
+"ثلاثمائة سنين وازدادوا تسعا",
+"قصة أهل الكهف",
+"كلبهم باسط ذراعيه"
+],
+"en": [
+"people of the cave",
+"seven sleepers"
+],
+"w": 1.9
+},
+{
+"id": "zulkarneyn_lokman",
+"alan": "kissa",
+"tr": [
+"zülkarneyn",
+"zulkarneyn",
+"ye'cüc ve me'cüc",
+"yecüc mecüc",
+"yecuc",
+"lokmân",
+"lokman hekim",
+"lokmân'ın",
+"luqman",
+"hz. lokman"
+],
+"ar": [
+"ذو القرنين",
+"يأجوج ومأجوج",
+"لقمان",
+"وصايا لقمان",
+"سد ذي القرنين"
+],
+"en": [
+"dhul-qarnayn",
+"gog and magog",
+"luqman"
+],
+"w": 1.0
+},
+{
+"id": "ashab_fil",
+"alan": "kissa",
+"tr": [
+"ashâb-ı fîl",
+"ashab-ı fil",
+"fil vakası",
+"fîl vak",
+"ebrehe",
+"ebraha",
+"fil sûresi",
+"fil suresi",
+"ebâbîl",
+"ebabil"
+],
+"ar": [
+"أصحاب الفيل",
+"أبرهة",
+"سورة الفيل",
+"الطير الأبابيل",
+"عام الفيل"
+],
+"en": [
+"people of the elephant",
+"abraha"
+],
+"w": 1.4
+},
+{
+"id": "siyer",
+"alan": "siyer",
+"tr": [
+"siyer",
+"sîret",
+"sîre",
+"siyer-i nebî",
+"siyer kitap",
+"hayat-ı peygamber",
+"peygamberin hayat",
+"peygamberimizin hayat"
+],
+"ar": [
+"السيرة النبوية",
+"السيرة",
+"سيرة النبي",
+"حياة النبي"
+],
+"en": [
+"prophetic biography",
+"sirah"
+],
+"w": 1.1
+},
+{
+"id": "muhammed",
+"alan": "siyer",
+"tr": [
+"muhammed",
+"hz. muhammed",
+"peygamberimiz",
+"resûlullah",
+"resulullah",
+"hz. peygamber",
+"hazreti muhammed",
+"peygamber efendimiz",
+"efendimiz",
+"hz peygamber",
+"peygamberin",
+"peygamberimizin",
+"hz. peygamberin"
+],
+"ar": [
+"النبي محمد",
+"رسول الله صلى الله عليه وسلم",
+"محمد بن عبد الله",
+"النبي صلى الله عليه وسلم",
+"خاتم الأنبياء"
+],
+"en": [
+"prophet muhammad"
+],
+"w": 0.7
+},
+{
+"id": "muhammed_dogum",
+"alan": "siyer",
+"tr": [
+"nerede doğ",
+"nerede dünyaya",
+"doğum yeri",
+"nerede doğdu",
+"mevlid-i nebî",
+"doğduğu yer",
+"dünyaya geldi",
+"dünyaya gel",
+"ne zaman doğ",
+"doğum tarihi",
+"muhammed'in doğum",
+"hz. muhammed'in doğ",
+"peygamberin doğ",
+"peygamberimizin doğ",
+"muhammed doğ"
+],
+"ar": [
+"مولد النبي",
+"ولادة النبي صلى الله عليه وسلم",
+"مكان مولد النبي",
+"عام الفيل",
+"ولد النبي بمكة"
+],
+"en": [
+"birth of the prophet",
+"where was the prophet born"
+],
+"w": 1.8,
+"baglam": [
+"muhammed",
+"hz_peygamber_ctx"
+]
+},
+{
+"id": "peygamberlik_yas",
+"alan": "siyer",
+"tr": [
+"kaç yaşında peygamber",
+"kırk yaşında",
+"peygamberliğin başla",
+"peygamber olarak gönder",
+"nübüvvet geldi",
+"ilk vahiy nasıl",
+"ilk vahiy ne zaman",
+"kırk yaş",
+"risâlet",
+"bi'set",
+"bi'sete"
+],
+"ar": [
+"بعثة النبي",
+"البعثة",
+"نزول الوحي الأول",
+"بدء الوحي",
+"بلغ الأربعين",
+"غار حراء"
+],
+"en": [
+"the beginning of prophethood",
+"first revelation"
+],
+"w": 1.8,
+"baglam": [
+"muhammed",
+"hz_peygamber_ctx"
+]
+},
+{
+"id": "ilk_muslumanlar",
+"alan": "siyer",
+"tr": [
+"ilk müslüman",
+"ilk iman",
+"ilk islâm",
+"ilk islam",
+"ilk kabul eden",
+"ilk Müslümanlar",
+"islâm'ı ilk",
+"islam'ı ilk",
+"ilk inanan",
+"ilk iman eden"
+],
+"ar": [
+"أول من أسلم",
+"السابقون الأولون",
+"السابقون إلى الإسلام",
+"أول من آمن بالنبي"
+],
+"en": [
+"first muslims",
+"early converts"
+],
+"w": 1.8
+},
+{
+"id": "hicret",
+"alan": "siyer",
+"tr": [
+"hicret",
+"hicretin",
+"hicrî",
+"hicri",
+"mekke'den medine",
+"hicret et"
+],
+"ar": [
+"الهجرة",
+"هجرة النبي إلى المدينة",
+"الهجرة النبوية",
+"الهجرة إلى المدينة"
+],
+"en": [
+"hijra",
+"migration to medina"
+],
+"w": 1.2
+},
+{
+"id": "mekke_medine",
+"alan": "siyer",
+"tr": [
+"mekke",
+"medine",
+"mekkeli",
+"medineli",
+"mekke dönemi",
+"medine dönemi",
+"medine vesikası",
+"medine sözleşmesi",
+"ensâr",
+"muhâcir",
+"kardeşleştirme",
+"muâhât",
+"muahat"
+],
+"ar": [
+"مكة",
+"المدينة",
+"العهد المكي",
+"العهد المدني",
+"الأنصار",
+"المهاجرون",
+"المؤاخاة",
+"الصحيفة"
+],
+"en": [
+"mecca",
+"medina",
+"ansar",
+"muhajirun"
+],
+"w": 0.9
+},
+{
+"id": "bedir",
+"alan": "siyer",
+"tr": [
+"bedir",
+"bedir savaş",
+"bedir gazve",
+"gazve-i bedir",
+"bedir muharebe",
+"bedir'de",
+"bedirde"
+],
+"ar": [
+"غزوة بدر",
+"بدر",
+"يوم بدر",
+"معركة بدر الكبرى",
+"أهل بدر"
+],
+"en": [
+"battle of badr",
+"badr"
+],
+"w": 1.6
+},
+{
+"id": "uhud",
+"alan": "siyer",
+"tr": [
+"uhud",
+"uhut",
+"uhud savaş",
+"uhud gazve",
+"gazve-i uhud",
+"okçular tepesi",
+"uhud'da",
+"uhudda",
+"uhud'un"
+],
+"ar": [
+"غزوة أحد",
+"أحد",
+"يوم أحد",
+"الرماة",
+"جبل الرماة",
+"حمزة بن عبد المطلب"
+],
+"en": [
+"battle of uhud",
+"uhud"
+],
+"w": 1.6
+},
+{
+"id": "hendek",
+"alan": "siyer",
+"tr": [
+"hendek",
+"hendek savaş",
+"ahzâb",
+"ahzab",
+"hendek gazve",
+"gazve-i hendek",
+"hendek kaz"
+],
+"ar": [
+"غزوة الخندق",
+"الأحزاب",
+"حفر الخندق",
+"غزوة الأحزاب"
+],
+"en": [
+"battle of the trench",
+"al-ahzab"
+],
+"w": 1.5
+},
+{
+"id": "hudeybiye",
+"alan": "siyer",
+"tr": [
+"hudeybiye",
+"hudeybiye antlaşma",
+"hudeybiye barış",
+"hudeybiye sulh",
+"hudeybiyye",
+"bi'at-ı rıdvân",
+"beyat-ı rıdvan",
+"rıdvân biat"
+],
+"ar": [
+"صلح الحديبية",
+"الحديبية",
+"بيعة الرضوان",
+"عمرة الحديبية"
+],
+"en": [
+"treaty of hudaybiyyah",
+"hudaybiyah"
+],
+"w": 1.7
+},
+{
+"id": "hayber_huneyn_tebuk",
+"alan": "siyer",
+"tr": [
+"hayber",
+"huneyn",
+"tebük",
+"tebuk",
+"mûte",
+"mute savaş",
+"taif",
+"tâif",
+"gazve",
+"gazveler",
+"seriyye",
+"seriyyeler"
+],
+"ar": [
+"غزوة خيبر",
+"غزوة حنين",
+"غزوة تبوك",
+"غزوة مؤتة",
+"الطائف",
+"الغزوات",
+"السرايا"
+],
+"en": [
+"khaybar",
+"hunayn",
+"tabuk",
+"muta"
+],
+"w": 1.0
+},
+{
+"id": "mekke_fethi",
+"alan": "siyer",
+"tr": [
+"mekke'nin fet",
+"mekkenin fet",
+"mekke fet",
+"fetih mekke",
+"mekke'nin fethi",
+"mekke fethi",
+"fetih günü",
+"fetih sûresi",
+"fetih suresi",
+"kâbe'yi put",
+"kabe'yi put",
+"putlardan temizle",
+"lâ tesrîbe",
+"la tesribe",
+"bugün merhamet günü",
+"tulakâ",
+"tuleka"
+],
+"ar": [
+"فتح مكة",
+"يوم الفتح",
+"الفتح الأعظم",
+"تحطيم الأصنام",
+"لا تثريب عليكم اليوم",
+"الطلقاء"
+],
+"en": [
+"conquest of mecca",
+"fath makkah"
+],
+"w": 1.9
+},
+{
+"id": "veda",
+"alan": "siyer",
+"tr": [
+"veda haccı",
+"veda hutbe",
+"veda hutbesi",
+"veda hacc",
+"veda'",
+"hacetü'l-vedâ",
+"haccetül veda",
+"arafat hutbe"
+],
+"ar": [
+"حجة الوداع",
+"خطبة الوداع",
+"الوداع"
+],
+"en": [
+"farewell pilgrimage",
+"farewell sermon"
+],
+"w": 1.6
+},
+{
+"id": "miraç",
+"alan": "siyer",
+"tr": [
+"mirâc",
+"miraç",
+"isrâ",
+"isra",
+"mi'râc",
+"mirac",
+"isrâ ve mi'râc",
+"isra ve miraç",
+"mescid-i aksâ",
+"mescid-i aksa",
+"burak",
+"sidretü'l-müntehâ",
+"sidre",
+"göğe yüksel",
+"göğe çık",
+"namaz farz kılın",
+"elli vakit"
+],
+"ar": [
+"الإسراء والمعراج",
+"المعراج",
+"الإسراء",
+"المسجد الأقصى",
+"البراق",
+"سدرة المنتهى",
+"فرض الصلوات الخمس"
+],
+"en": [
+"isra and miraj",
+"night journey",
+"ascension"
+],
+"w": 1.8
+},
+{
+"id": "vefat_peygamber",
+"alan": "siyer",
+"tr": [
+"vefat",
+"vefâtı",
+"vefat etti",
+"vefat et",
+"ahirete irtihal",
+"irtihâl",
+"ölüm hastalığı",
+"son hastalığı",
+"peygamberin vefat",
+"peygamberimizin vefat",
+"hz. peygamberin vefat",
+"muhammed'in vefat",
+"rıhlet",
+"rihlet"
+],
+"ar": [
+"وفاة النبي",
+"وفاة الرسول صلى الله عليه وسلم",
+"مرض النبي",
+"وفاة النبي صلى الله عليه وسلم",
+"يوم وفاة النبي",
+"الرفيق الأعلى"
+],
+"en": [
+"death of the prophet"
+],
+"w": 1.2,
+"baglam": [
+"muhammed",
+"hz_peygamber_ctx"
+]
+},
+{
+"id": "peygamber_aile",
+"alan": "siyer",
+"tr": [
+"annesi",
+"babası",
+"dedesi",
+"âmine",
+"amine",
+"abdullah",
+"abdülmuttalib",
+"abdulmuttalib",
+"ebû tâlib",
+"ebu talib",
+"amcası",
+"süt anne",
+"halîme",
+"halime",
+"ümmü eymen",
+"hz. peygamberin ailesi",
+"peygamberin soyu",
+"nesebi"
+],
+"ar": [
+"آمنة بنت وهب",
+"عبد الله بن عبد المطلب",
+"عبد المطلب",
+"أبو طالب",
+"حليمة السعدية",
+"نسب النبي",
+"أم أيمن"
+],
+"en": [
+"parents of the prophet",
+"abdul muttalib",
+"abu talib",
+"halima"
+],
+"w": 1.5
+},
+{
+"id": "peygamber_hanimlari",
+"alan": "siyer",
+"tr": [
+"ümmehâtü'l-mü'minîn",
+"ümmehatül müminin",
+"peygamberin hanımları",
+"peygamberimizin hanımları",
+"peygamber eşleri",
+"ümmü seleme",
+"hafsa",
+"zeyneb bint",
+"sevde",
+"safiyye",
+"cüveyriyye",
+"meymûne",
+"mâriye"
+],
+"ar": [
+"أمهات المؤمنين",
+"أزواج النبي",
+"زوجات النبي صلى الله عليه وسلم",
+"أم سلمة",
+"حفصة",
+"سودة",
+"صفية"
+],
+"en": [
+"mothers of the believers",
+"wives of the prophet"
+],
+"w": 1.3
+},
+{
+"id": "hatice",
+"alan": "siyer",
+"tr": [
+"hatîce",
+"hatice",
+"hz. hatîce",
+"hz. hatice",
+"hatice-i kübrâ",
+"hatice validemiz"
+],
+"ar": [
+"خديجة بنت خويلد",
+"خديجة",
+"أم المؤمنين خديجة",
+"خديجة الكبرى"
+],
+"en": [
+"khadija"
+],
+"w": 1.4
+},
+{
+"id": "aise",
+"alan": "siyer",
+"tr": [
+"âişe",
+"aise",
+"ayşe",
+"hz. âişe",
+"hz. aişe",
+"âişe validemiz",
+"aise-i sıddîka",
+"ifk hadisesi",
+"ifk vak"
+],
+"ar": [
+"عائشة",
+"عائشة بنت أبي بكر",
+"عائشة الصديقة",
+"حادثة الإفك"
+],
+"en": [
+"aisha"
+],
+"w": 1.4
+},
+{
+"id": "ebubekir",
+"alan": "siyer",
+"tr": [
+"ebû bekir",
+"ebubekir",
+"ebu bekir",
+"hz. ebû bekir",
+"hz. ebubekir",
+"sıddîk",
+"siddik",
+"ebû bekir es-sıddîk",
+"hz. ebu bekir",
+"birinci halife"
+],
+"ar": [
+"أبو بكر الصديق",
+"أبو بكر",
+"الصديق",
+"خلافة أبي بكر",
+"عتيق"
+],
+"en": [
+"abu bakr",
+"abu bakr al-siddiq"
+],
+"w": 1.6
+},
+{
+"id": "omer",
+"alan": "siyer",
+"tr": [
+"ömer$",
+"omer$",
+"hz. ömer",
+"hz. omer",
+"ömer b. hattâb",
+"ömer bin hattab",
+"fârûk",
+"faruk",
+"ömerü'l-fârûk",
+"ikinci halife",
+"hz ömer",
+"hz omer",
+"ömer'in",
+"ömerin"
+],
+"ar": [
+"عمر بن الخطاب",
+"الفاروق",
+"أمير المؤمنين عمر",
+"خلافة عمر",
+"عمر الفاروق"
+],
+"en": [
+"umar",
+"umar ibn al-khattab"
+],
+"w": 1.6
+},
+{
+"id": "osman",
+"alan": "siyer",
+"tr": [
+"osman$",
+"hz. osman",
+"osman b. affân",
+"osman bin affan",
+"zinnûreyn",
+"zinnureyn",
+"üçüncü halife",
+"hz osman",
+"osman'ın",
+"osmanın"
+],
+"ar": [
+"عثمان بن عفان",
+"ذو النورين",
+"خلافة عثمان",
+"أمير المؤمنين عثمان"
+],
+"en": [
+"uthman",
+"uthman ibn affan"
+],
+"w": 1.4
+},
+{
+"id": "ali",
+"alan": "siyer",
+"tr": [
+"hz. ali",
+"hz ali",
+"ali b. ebî tâlib",
+"ali bin ebu talib",
+"ali b. ebi talib",
+"dördüncü halife",
+"haydar-ı kerrâr",
+"hz. alinin",
+"ali'nin",
+"esedullah"
+],
+"ar": [
+"علي بن أبي طالب",
+"أمير المؤمنين علي",
+"خلافة علي",
+"علي كرم الله وجهه",
+"حيدر"
+],
+"en": [
+"ali",
+"ali ibn abi talib"
+],
+"w": 1.4
+},
+{
+"id": "sahabe_kisi",
+"alan": "siyer",
+"tr": [
+"hamza",
+"hz. hamza",
+"bilâl",
+"bilal-i habeşî",
+"bilal",
+"hâlid b. velîd",
+"halid bin velid",
+"halid b. velid",
+"seyfullah",
+"seyfüllah",
+"ebû hüreyre",
+"ebu hureyre",
+"abdullah b. mes'ûd",
+"abdullah b. abbâs",
+"ibn abbas",
+"ibn abbâs",
+"selmân-ı fârisî",
+"selman-ı farisi",
+"ebû zer",
+"ebu zer",
+"mus'ab b. umeyr",
+"musab b. umeyr",
+"ammâr b. yâsir",
+"ammar b. yasir",
+"sümeyye",
+"zeyd b. hârise",
+"zeyd b. sâbit",
+"muâz b. cebel",
+"ebû ubeyde",
+"amr b. âs",
+"saad b. ebî vakkas",
+"sa'd b. ebî vakkâs"
+],
+"ar": [
+"حمزة بن عبد المطلب",
+"بلال بن رباح",
+"خالد بن الوليد",
+"سيف الله",
+"أبو هريرة",
+"عبد الله بن مسعود",
+"عبد الله بن عباس",
+"سلمان الفارسي",
+"أبو ذر الغفاري",
+"مصعب بن عمير",
+"عمار بن ياسر",
+"زيد بن حارثة",
+"معاذ بن جبل",
+"أبو عبيدة بن الجراح",
+"عمرو بن العاص",
+"سعد بن أبي وقاص"
+],
+"en": [
+"companions of the prophet"
+],
+"w": 1.1
+},
+{
+"id": "asere",
+"alan": "siyer",
+"tr": [
+"aşere-i mübeşşere",
+"aşere",
+"on müjdelenmiş",
+"cennetle müjdelenen on",
+"cennetle müjdelen",
+"cennet müjdelenen",
+"on sahabe",
+"cennetle müjde"
+],
+"ar": [
+"العشرة المبشرة بالجنة",
+"العشرة المبشرون بالجنة",
+"المبشرون بالجنة",
+"طلحة والزبير وعبد الرحمن بن عوف"
+],
+"en": [
+"ten promised paradise",
+"al-ashara al-mubashshara"
+],
+"w": 1.9
+},
+{
+"id": "hasan_huseyin_kerbela",
+"alan": "siyer",
+"tr": [
+"hasan$",
+"hüseyin$",
+"huseyin$",
+"hz. hüseyin",
+"hz. hasan",
+"kerbelâ",
+"kerbela",
+"kerbelâ olay",
+"kerbela olay",
+"kerbelâ vak",
+"kerbela vak",
+"âşûrâ",
+"asure",
+"aşure",
+"muharrem",
+"yezîd",
+"yezid",
+"ibn ziyâd",
+"ibn ziyad",
+"imam hüseyin",
+"seyyidü'ş-şühedâ"
+],
+"ar": [
+"الحسين بن علي",
+"الحسن بن علي",
+"كربلاء",
+"مقتل الحسين",
+"عاشوراء",
+"يزيد بن معاوية",
+"عبيد الله بن زياد",
+"سبطا رسول الله"
+],
+"en": [
+"hussein ibn ali",
+"karbala",
+"ashura"
+],
+"w": 1.2
+},
+{
+"id": "sifat_sahabe_muaviye",
+"alan": "siyer",
+"tr": [
+"muâviye",
+"muaviye",
+"hz. muâviye",
+"muâviye b. ebî süfyân",
+"cemel vak",
+"cemel savaş",
+"sıffîn",
+"sıffin",
+"sıffîn savaş",
+"hakem",
+"hakemeyn",
+"tahkim",
+"fitne dönemi",
+"hz. osman'ın şehâd",
+"osman'ın şehit"
+],
+"ar": [
+"معاوية بن أبي سفيان",
+"موقعة الجمل",
+"معركة صفين",
+"التحكيم",
+"الفتنة الكبرى",
+"مقتل عثمان"
+],
+"en": [
+"muawiya",
+"battle of the camel",
+"battle of siffin",
+"arbitration"
+],
+"w": 1.4
+},
+{
+"id": "sahabe_ashab_suffe",
+"alan": "siyer",
+"tr": [
+"ashâb-ı suffe",
+"suffe ehli",
+"suffe",
+"ashab-ı suffa"
+],
+"ar": [
+"أهل الصفة",
+"أصحاب الصفة"
+],
+"en": [
+"people of the suffa"
+],
+"w": 1.0
+},
+{
+"id": "semail",
+"alan": "siyer",
+"tr": [
+"şemâil",
+"şemail",
+"ahlâk-ı peygamber",
+"peygamberin ahlak",
+"peygamberin ahlâkı",
+"peygamberimizin ahlak",
+"peygamberin güzel ahlak",
+"hulk-ı azîm",
+"peygamberimizin özellik",
+"peygamberin görünüş",
+"peygamberin sıfat",
+"hilye-i şerîf",
+"hilye"
+],
+"ar": [
+"الشمائل المحمدية",
+"أخلاق النبي",
+"صفة النبي صلى الله عليه وسلم",
+"شمائل النبي",
+"الخلق العظيم"
+],
+"en": [
+"characteristics of the prophet",
+"shamail"
+],
+"w": 1.4
+},
+{
+"id": "dalail_nubuvvet",
+"alan": "siyer",
+"tr": [
+"peygamberin mucize",
+"peygamberimizin mucize",
+"dalâil-i nübüvvet",
+"delâil-i nübüvvet",
+"hz. peygamberin mucize",
+"muhammed'in mucize",
+"ay yarıl",
+"şakk-ı kamer",
+"parmak arasından su",
+"hurma kütüğü",
+"hannâne"
+],
+"ar": [
+"دلائل النبوة",
+"معجزات النبي",
+"انشقاق القمر",
+"نبع الماء من بين أصابعه",
+"حنين الجذع"
+],
+"en": [
+"miracles of the prophet",
+"dalail al-nubuwwah"
+],
+"w": 1.5
+},
+{
+"id": "haram_aylar_ibadet_tarih",
+"alan": "siyer",
+"tr": [
+"hicri takvim",
+"hicrî takvim",
+"hicri yılbaşı",
+"hicrî yıl",
+"takvimin başlangıç",
+"takvim başlangıç",
+"hicrî tarih",
+"hicri tarih",
+"muharrem ayı",
+"ramazan ayı",
+"şaban"
+],
+"ar": [
+"التقويم الهجري",
+"التاريخ الهجري",
+"بداية التقويم الهجري",
+"الأشهر الحرم"
+],
+"en": [
+"hijri calendar"
+],
+"w": 1.3
+},
+{
+"id": "tarih",
+"alan": "tarih",
+"tr": [
+"tarih",
+"târîh",
+"tarihi",
+"tarihçe",
+"islam tarihi",
+"islâm tarihi"
+],
+"ar": [
+"التاريخ",
+"تاريخ الإسلام",
+"التاريخ الإسلامي",
+"الأخبار"
+],
+"en": [
+"history",
+"islamic history"
+],
+"w": 0.8
+},
+{
+"id": "emeviler",
+"alan": "tarih",
+"tr": [
+"emevî",
+"emevi",
+"emeviler",
+"emevîler",
+"emevî devleti",
+"emevi devleti",
+"emevi hanedan",
+"emevîler dönem"
+],
+"ar": [
+"الدولة الأموية",
+"بنو أمية",
+"الأمويون",
+"الخلافة الأموية",
+"قيام الدولة الأموية"
+],
+"en": [
+"umayyad",
+"umayyad caliphate"
+],
+"w": 1.6
+},
+{
+"id": "abbasiler",
+"alan": "tarih",
+"tr": [
+"abbâsî",
+"abbasi",
+"abbâsîler",
+"abbasiler",
+"abbâsî devleti",
+"abbasi devleti",
+"abbasi halife",
+"abbâsî halife",
+"abbasi dönem"
+],
+"ar": [
+"الدولة العباسية",
+"بنو العباس",
+"العباسيون",
+"الخلافة العباسية",
+"قيام الدولة العباسية"
+],
+"en": [
+"abbasid",
+"abbasid caliphate"
+],
+"w": 1.6
+},
+{
+"id": "endulus",
+"alan": "tarih",
+"tr": [
+"endülüs",
+"endulus",
+"endülüs'ün fet",
+"endülüs fet",
+"endülüs devlet",
+"endülüs emevî",
+"endülüs'te",
+"endülüs'ün",
+"endüls",
+"kurtuba",
+"kurtuba halif",
+"gırnata",
+"gırnâta",
+"granada"
+],
+"ar": [
+"الأندلس",
+"فتح الأندلس",
+"الدولة الأموية في الأندلس",
+"قرطبة",
+"غرناطة",
+"سقوط الأندلس"
+],
+"en": [
+"al-andalus",
+"andalusia",
+"conquest of spain"
+],
+"w": 1.6
+},
+{
+"id": "tarik_bin_ziyad",
+"alan": "tarih",
+"tr": [
+"târık b. ziyâd",
+"tarık bin ziyad",
+"tarık b. ziyad",
+"tarık ibn ziyad",
+"cebelitarık",
+"cebel-i târık",
+"ceyl-i tarık",
+"cebeli tarık",
+"gibraltar",
+"rodrigo",
+"guadalete",
+"musa b. nusayr",
+"mûsâ b. nusayr",
+"mûsâ bin nusayr"
+],
+"ar": [
+"طارق بن زياد",
+"جبل طارق",
+"فتح الأندلس",
+"لذريق",
+"موسى بن نصير",
+"معركة وادي لكة"
+],
+"en": [
+"tariq ibn ziyad",
+"gibraltar",
+"musa ibn nusayr"
+],
+"w": 1.8
+},
+{
+"id": "fetihler",
+"alan": "tarih",
+"tr": [
+"fetih",
+"fetihler",
+"fütûhât-ı islâmiyye",
+"fütuhat-ı islamiyye",
+"ilk fetih",
+"irak fet",
+"şam fet",
+"mısır fet",
+"kudüs fet",
+"sasani",
+"bizans",
+"yermük",
+"kadisiye",
+"kâdisiyye",
+"ecnâdeyn"
+],
+"ar": [
+"الفتوحات الإسلامية",
+"الفتوح",
+"فتح الشام",
+"فتح العراق",
+"فتح مصر",
+"اليرموك",
+"القادسية",
+"فتح بيت المقدس",
+"فتوح البلدان"
+],
+"en": [
+"islamic conquests",
+"futuh"
+],
+"w": 0.9
+},
+{
+"id": "selahaddin_hittin",
+"alan": "tarih",
+"tr": [
+"selâhaddîn",
+"selahaddin",
+"selahaddin eyyûbî",
+"salahaddin",
+"selâhaddîn-i eyyûbî",
+"salâh ed-dîn",
+"selahattin eyyubi",
+"hıttîn",
+"hittin",
+"hıttin",
+"hıttîn savaş",
+"hıttin savaş",
+"hıttîn muharebe",
+"ricar",
+"kral guy",
+"arnat"
+],
+"ar": [
+"صلاح الدين الأيوبي",
+"معركة حطين",
+"حطين",
+"فتح بيت المقدس",
+"الأيوبيون",
+"الدولة الأيوبية"
+],
+"en": [
+"saladin",
+"battle of hattin"
+],
+"w": 1.9
+},
+{
+"id": "haclilar",
+"alan": "tarih",
+"tr": [
+"haçlı",
+"haclı",
+"haçlılar",
+"haçlı sefer",
+"haçlı seferleri",
+"haçlı savaş",
+"haçlı devlet",
+"kudüs krallığı",
+"franklar",
+"frenkler"
+],
+"ar": [
+"الحروب الصليبية",
+"الصليبيون",
+"الفرنجة",
+"إمارة الرها",
+"مملكة بيت المقدس",
+"الحملات الصليبية"
+],
+"en": [
+"crusades",
+"crusaders"
+],
+"w": 0.9
+},
+{
+"id": "kudus",
+"alan": "tarih",
+"tr": [
+"kudüs",
+"kudus",
+"beyt-i makdis",
+"beytülmakdis",
+"beytü'l-makdis",
+"mescid-i aksâ",
+"mescid-i aksa",
+"kudüs'ün fet",
+"kudüs fethi",
+"kudüs'ün"
+],
+"ar": [
+"القدس",
+"بيت المقدس",
+"المسجد الأقصى",
+"فتح بيت المقدس",
+"إيلياء"
+],
+"en": [
+"jerusalem",
+"bayt al-maqdis"
+],
+"w": 0.9
+},
+{
+"id": "mogol_bagdat",
+"alan": "tarih",
+"tr": [
+"moğol",
+"moğollar",
+"hülâgü",
+"hulagu",
+"bağdat'ın düş",
+"bağdat'ın sukut",
+"bağdat sukut",
+"bağdat'ın yıkıl",
+"ayn-ı calut",
+"aynicalut",
+"ayn-ı câlût",
+"bağdat'ın",
+"bağdat"
+],
+"ar": [
+"المغول",
+"هولاكو",
+"سقوط بغداد",
+"عين جالوت",
+"بغداد",
+"التتار"
+],
+"en": [
+"mongols",
+"fall of baghdad"
+],
+"w": 0.9
+},
+{
+"id": "osmanli",
+"alan": "tarih",
+"tr": [
+"osmanlı",
+"osmanlılar",
+"osmanlı devleti",
+"osmanlı sultan",
+"osmanlı padişah",
+"sultan",
+"padişah",
+"saltanat"
+],
+"ar": [
+"الدولة العثمانية",
+"العثمانيون",
+"آل عثمان",
+"السلطان العثماني",
+"السلطنة"
+],
+"en": [
+"ottoman",
+"ottoman empire"
+],
+"w": 0.9
+},
+{
+"id": "yavuz_hilafet",
+"alan": "tarih",
+"tr": [
+"yavuz sultan selim",
+"yavuz selim",
+"yavuz sultan selîm",
+"1517",
+"mısır seferi",
+"ridâniyye",
+"ridaniye",
+"hilâfetin osmanlı",
+"hilafetin osmanlı",
+"hilafet osmanlı",
+"halifelik osmanlı",
+"hilâfetin osmanlılara",
+"hilâfet osmanlılara",
+"hilafet ne zaman ve nasıl",
+"hilâfetin geçi",
+"halifelik osmanlıya",
+"mütevekkil",
+"mütevekkil alellah",
+"mutevekkil",
+"kutsal emanet",
+"mukaddes emanet",
+"emanât-ı mukaddese",
+"hırka-i saadet"
+],
+"ar": [
+"انتقال الخلافة إلى العثمانيين",
+"السلطان سليم",
+"فتح مصر",
+"الريدانية",
+"الخلافة العثمانية",
+"المتوكل على الله",
+"الأمانات المقدسة",
+"سليم الأول"
+],
+"en": [
+"transfer of the caliphate to the ottomans",
+"selim i",
+"conquest of egypt"
+],
+"w": 2.0
+},
+{
+"id": "memluk_fatimi_selcuk",
+"alan": "tarih",
+"tr": [
+"memlûk",
+"memluk",
+"memlükler",
+"fâtımî",
+"fatimi",
+"fâtımîler",
+"selçuklu",
+"selçuklular",
+"selçuk devlet",
+"büyük selçuklu",
+"anadolu selçuklu",
+"gazneli",
+"gaznelî",
+"eyyûbî",
+"eyyubi",
+"karahanlı",
+"harezmşah",
+"zengî",
+"zengi"
+],
+"ar": [
+"المماليك",
+"دولة المماليك",
+"الفاطميون",
+"الدولة الفاطمية",
+"السلاجقة",
+"الدولة السلجوقية",
+"الغزنويون",
+"الأيوبيون",
+"الزنكيون",
+"الخوارزمية"
+],
+"en": [
+"mamluks",
+"fatimids",
+"seljuks",
+"ayyubids"
+],
+"w": 0.9
+},
+{
+"id": "harun_resid_halife",
+"alan": "tarih",
+"tr": [
+"hârûnürreşîd",
+"harun reşid",
+"harunürreşid",
+"me'mûn",
+"memun",
+"mansûr",
+"mansur",
+"beyt'ül-hikme",
+"beytülhikme",
+"beytü'l-hikme",
+"tercüme hareketi",
+"bağdat'ta kurul",
+"ebû ca'fer el-mansûr"
+],
+"ar": [
+"هارون الرشيد",
+"المأمون",
+"بيت الحكمة",
+"حركة الترجمة",
+"أبو جعفر المنصور",
+"بغداد المدورة"
+],
+"en": [
+"harun al-rashid",
+"house of wisdom",
+"al-mamun"
+],
+"w": 0.9
+},
+{
+"id": "ridde_musaylima",
+"alan": "tarih",
+"tr": [
+"ridde savaş",
+"irtidat savaş",
+"yalancı peygamber",
+"müseylime",
+"müseylime-i kezzâb",
+"yemâme",
+"yemame",
+"esved el-ansî",
+"tuleyha",
+"zekât vermeyen",
+"mürtedlerle savaş",
+"mürtedlerle mücadele",
+"ridde hareket"
+],
+"ar": [
+"حروب الردة",
+"مسيلمة الكذاب",
+"معركة اليمامة",
+"الأسود العنسي",
+"طليحة",
+"مانعو الزكاة"
+],
+"en": [
+"ridda wars",
+"false prophets",
+"battle of yamama"
+],
+"w": 1.6
+},
+{
+"id": "ibn_haldun_taberi_tarih",
+"alan": "tarih",
+"tr": [
+"ibn haldûn",
+"ibn haldun",
+"mukaddime",
+"mukaddimesi",
+"ibn haldun mukaddime",
+"taberî",
+"taberi",
+"târîh-i taberî",
+"taberi tarihi",
+"ibn esîr",
+"ibnü'l-esîr",
+"ibn esir",
+"el-kâmil",
+"ibn kesîr",
+"ibn kesir",
+"el-bidâye ve'n-nihâye",
+"bidâye ve nihâye",
+"mes'ûdî",
+"mesudi",
+"mürûcü'z-zeheb",
+"zehebî",
+"zehebi",
+"siyeru a'lâmi'n-nübelâ",
+"yâkût",
+"yakut el-hamevî",
+"mu'cemü'l-büldân",
+"makrîzî",
+"makrizi",
+"belâzürî",
+"belazuri",
+"hatîb el-bağdâdî",
+"tarihu bağdad"
+],
+"ar": [
+"ابن خلدون",
+"المقدمة",
+"الطبري",
+"تاريخ الطبري",
+"تاريخ الرسل والملوك",
+"ابن الأثير",
+"الكامل في التاريخ",
+"ابن كثير",
+"البداية والنهاية",
+"المسعودي",
+"مروج الذهب",
+"الذهبي",
+"سير أعلام النبلاء",
+"ياقوت الحموي",
+"معجم البلدان",
+"المقريزي",
+"البلاذري",
+"الخطيب البغدادي",
+"تاريخ بغداد"
+],
+"en": [
+"ibn khaldun",
+"muqaddimah",
+"al-tabari",
+"ibn al-athir",
+"ibn kathir",
+"al-dhahabi",
+"yaqut"
+],
+"w": 1.3
+},
+{
+"id": "tarih_erken_genel",
+"alan": "tarih",
+"tr": [
+"yaratılıştan",
+"yaratılıştan günümüze",
+"dünya tarihi",
+"evrensel tarih",
+"ilk insan tarih",
+"âdem'den bu yana",
+"başlangıcından",
+"tarihin başlangıç",
+"kavimler tarihi",
+"peygamberler ve milletler",
+"milletlerin tarihi",
+"mülûk"
+],
+"ar": [
+"بدء الخلق",
+"بدء الخلق وقصص الأنبياء",
+"تاريخ الأمم",
+"تاريخ الرسل والملوك",
+"البداية والنهاية",
+"أخبار الأمم",
+"بدء الخلق والتاريخ"
+],
+"en": [
+"beginning of creation",
+"universal history"
+],
+"w": 1.0
+},
+{
+"id": "halife_hilafet_tarihi",
+"alan": "tarih",
+"tr": [
+"halifeler tarihi",
+"hilâfet tarihi",
+"hilafet tarihi",
+"halifelik tarihi",
+"emevi halife",
+"abbasi halife",
+"halife kimdir",
+"halifeler",
+"emîrü'l-mü'minîn",
+"emirül müminin",
+"halifelik sistemi",
+"hilâfetin kaldırıl",
+"hilafetin kaldırıl",
+"hilâfetin sonu",
+"hilafetin sonu",
+"son halife"
+],
+"ar": [
+"تاريخ الخلفاء",
+"الخلفاء",
+"أمير المؤمنين",
+"نظام الخلافة",
+"إلغاء الخلافة",
+"تاريخ الخلفاء للسيوطي"
+],
+"en": [
+"history of the caliphs",
+"commander of the faithful"
+],
+"w": 1.3
+},
+{
+"id": "hz_ebubekir_donemi",
+"alan": "tarih",
+"tr": [
+"hz. ebû bekir dönem",
+"ebubekir dönem",
+"ebû bekir devri",
+"ömer dönemi",
+"ömer devri",
+"osman dönemi",
+"osman devri",
+"ali dönemi",
+"ali devri",
+"raşid halife dönemi",
+"halifelik dönemi",
+"hilâfet dönemi",
+"hilafet dönemi",
+"halifelik kaç yıl",
+"hilâfet kaç yıl",
+"hilafet kaç yıl",
+"dört halife dönem",
+"râşid halife dönem"
+],
+"ar": [
+"مدة الخلافة الراشدة",
+"خلافة الراشدين ثلاثون سنة",
+"الخلافة بعدي ثلاثون سنة",
+"عصر الخلفاء الراشدين",
+"تاريخ الخلافة الراشدة"
+],
+"en": [
+"duration of the rashidun caliphate"
+],
+"w": 1.6,
+"baglam": [
+"hulefa_rasidin",
+"ebubekir",
+"omer",
+"osman",
+"ali",
+"halifelik"
+]
+},
+{
+"id": "islam_tarih_donemleri",
+"alan": "tarih",
+"tr": [
+"asr-ı saâdet",
+"asr-ı saadet",
+"saâdet asrı",
+"tâbiîn",
+"tabiin",
+"tebe-i tâbiîn",
+"selef",
+"selef-i sâlih",
+"selefi salih",
+"hicrî birinci asır",
+"ilk asır",
+"hicri ilk asır",
+"ilk dört halife",
+"fetret",
+"inhitat",
+"yükseliş dönemi",
+"altın çağ",
+"islam medeniyeti",
+"islâm medeniyeti"
+],
+"ar": [
+"عصر النبوة",
+"التابعون",
+"تابعو التابعين",
+"السلف الصالح",
+"القرون المفضلة",
+"العصر الذهبي للإسلام",
+"الحضارة الإسلامية"
+],
+"en": [
+"islamic golden age",
+"salaf",
+"tabiun"
+],
+"w": 0.9
+},
+{
+"id": "riba_haram",
+"alan": "fikih",
+"tr": [
+"ribâ",
+"riba",
+"faizin haram",
+"faiz haram",
+"faizin hüküm",
+"faiz neden haram",
+"faizin yasak",
+"faiz yasak"
+],
+"ar": [
+"الربا",
+"تحريم الربا",
+"أنواع الربا",
+"الربا والفائدة"
+],
+"en": [
+"riba",
+"usury prohibition"
+],
+"w": 1.5
+},
+{
+"id": "sifat_genel",
+"alan": "akaid",
+"tr": [
+"sıfat",
+"sıfatlar",
+"sıfatları",
+"sıfâtı"
+],
+"ar": [
+"الصفات",
+"صفات الله"
+],
+"en": [
+"attributes"
+],
+"w": 0.6
+},
+{
+"id": "hz_peygamber_ctx",
+"alan": "siyer",
+"tr": [
+"peygamber$",
+"peygamberler$"
+],
+"ar": [
+"النبي"
+],
+"en": [],
+"w": 0.3
+}
+]
+}

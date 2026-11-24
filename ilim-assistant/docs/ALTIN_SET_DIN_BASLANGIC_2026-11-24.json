@@ -1,0 +1,29 @@
+{
+  "n": 130,
+  "gecti_pct": 36.2,
+  "bulamadim_pct": 27.7,
+  "ort_kapsama": 0.392,
+  "ham_dokum": 7,
+  "umit_abi_pct": 57.7,
+  "medyan_sn": 4.13,
+  "p90_sn": 18.95,
+  "saglayici": {
+    "None": 47,
+    "miss_kutuphane": 35,
+    "gemini": 23,
+    "hizli": 20,
+    "kutuphane_extractive": 5
+  },
+  "hata_sayisi": 0,
+  "raflar": {
+    "din": {
+      "n": 130,
+      "gecti_pct": 36.2,
+      "bulamadim_pct": 27.7,
+      "ort_kapsama": 0.392,
+      "ham_dokum": 7,
+      "umit_abi_pct": 57.7,
+      "medyan_sn": 4.13
+    }
+  }
+}

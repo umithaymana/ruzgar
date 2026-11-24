@@ -213,6 +213,17 @@ def _tdk_exact_path_allowed(msg: str, lemma: str | None) -> bool:
     """Kısa / sözlük nitelikli sorularda vektör 'hayalet' eşlemesine düşmeden yalnızca tam madde aranır."""
     if not lemma:
         return False
+    # Din/âlim sorusu («Namazın şartları nelerdir?», «Zekât kimlere verilir?»): TDK tam-madde yolu
+    # yalnız sözlükte arar, Şâmile/kütüphaneye HİÇ gitmez → hep «bulamadım». Bu sorular kütüphane yolundan geçer.
+    # Kapat (eski davranış): RUZGAR_TDK_EXACT_DIN=1
+    if os.environ.get("RUZGAR_TDK_EXACT_DIN", "0").strip().lower() not in ("1", "true", "yes"):
+        try:
+            from ilim_assistant.ruzgar_kutuphane_gorev import din_alani_sorusu
+
+            if din_alani_sorusu(msg):
+                return False
+        except Exception:
+            pass
     low = (msg or "").lower()
     hints = (
         "nedir",
@@ -2619,6 +2630,14 @@ def prepare_turn(
                     source_count=_src_n,
                     din=_k1_din_gd,
                 )
+                try:
+                    from ilim_assistant.ruzgar_k3_sorgu import kanit_dil_notu
+
+                    user_payload += kanit_dil_notu(
+                        list(blocks or []), want_source=user_wants_kaynak(msg)
+                    )
+                except Exception:
+                    pass
         except Exception:
             _kutup_hard = False
         # Sohbet önce: tüm konularda doğal bilgi dili (konu kilidi yok)

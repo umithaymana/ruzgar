@@ -1,0 +1,1416 @@
+{
+ "surum": "din-cekirdek-v1-2026-11-24",
+ "aciklama": "D1 envanter VERİSİ. Yalnız rapor/ölçüm içindir; üretim kodu bu listeye bağlı çalışamaz (Anayasa m.2-3). 'ar' = eser adında geçen Arapça anahtarlardan herhangi biri; 'yazar' (ops.) = yazar/ad alanında geçmesi gereken anahtar. Eksik görünen bir eserin gerçekte olup olmadığını envanter dok komutu ile kontrol edin; anahtar eklemek yeterlidir.",
+ "gruplar": [
+  {
+   "ad": "Tefsir",
+   "katman": "çekirdek",
+   "eserler": [
+    {
+     "ad": "Tefsîr-i Taberî (Câmiu'l-Beyân)",
+     "ar": [
+      "جامع البيان"
+     ]
+    },
+    {
+     "ad": "İbn Kesîr Tefsîri",
+     "ar": [
+      "تفسير ابن كثير"
+     ],
+     "yazar": [
+      "ابن كثير"
+     ]
+    },
+    {
+     "ad": "Kurtubî (el-Câmi' li-Ahkâmi'l-Kur'ân)",
+     "ar": [
+      "الجامع لأحكام القرآن"
+     ]
+    },
+    {
+     "ad": "Fahreddîn er-Râzî (Mefâtîhu'l-Gayb)",
+     "ar": [
+      "مفاتيح الغيب",
+      "التفسير الكبير"
+     ]
+    },
+    {
+     "ad": "Beydâvî (Envârü't-Tenzîl)",
+     "ar": [
+      "انوار التنزيل"
+     ]
+    },
+    {
+     "ad": "Nesefî (Medârikü't-Tenzîl)",
+     "ar": [
+      "مدارك التنزيل"
+     ]
+    },
+    {
+     "ad": "Celâleyn Tefsîri",
+     "ar": [
+      "تفسير الجلالين"
+     ]
+    },
+    {
+     "ad": "Begavî (Meâlimü't-Tenzîl)",
+     "ar": [
+      "تفسير البغوي"
+     ]
+    },
+    {
+     "ad": "Âlûsî (Rûhu'l-Me'ânî)",
+     "ar": [
+      "روح المعاني"
+     ]
+    },
+    {
+     "ad": "Ebüssuûd (İrşâdü'l-Aklî's-Selîm)",
+     "ar": [
+      "ارشاد العقل السليم"
+     ]
+    },
+    {
+     "ad": "Mâtürîdî (Te'vîlâtü Ehli's-Sünne)",
+     "ar": [
+      "تاويلات اهل السنه",
+      "تاويلات اهل السنة"
+     ]
+    },
+    {
+     "ad": "Suyûtî (ed-Dürrü'l-Mensûr)",
+     "ar": [
+      "الدر المنثور"
+     ]
+    },
+    {
+     "ad": "Şevkânî (Fethu'l-Kadîr)",
+     "ar": [
+      "فتح القدير"
+     ],
+     "yazar": [
+      "الشوكاني"
+     ]
+    },
+    {
+     "ad": "Ebû Hayyân (el-Bahru'l-Muhît)",
+     "ar": [
+      "البحر المحيط"
+     ],
+     "yazar": [
+      "حيان"
+     ]
+    },
+    {
+     "ad": "İbn Âşûr (et-Tahrîr ve't-Tenvîr)",
+     "ar": [
+      "التحرير والتنوير"
+     ]
+    },
+    {
+     "ad": "Zemahşerî (el-Keşşâf) — Mu'tezilî, mukayese için",
+     "ar": [
+      "الكشاف"
+     ]
+    },
+    {
+     "ad": "Kuşeyrî (Letâifü'l-İşârât) — işârî tefsir",
+     "ar": [
+      "لطائف الاشارات"
+     ]
+    },
+    {
+     "ad": "Sa'dî (Teysîru'l-Kerîmi'r-Rahmân)",
+     "ar": [
+      "تيسير الكريم الرحمن"
+     ]
+    },
+    {
+     "ad": "Sem'ânî / Semerkandî (Bahru'l-Ulûm)",
+     "ar": [
+      "بحر العلوم"
+     ]
+    },
+    {
+     "ad": "Vâhidî (el-Vecîz/el-Basît/Esbâb-ı Nüzûl)",
+     "ar": [
+      "اسباب النزول"
+     ]
+    }
+   ]
+  },
+  {
+   "ad": "Kur'ân ilimleri / tecvid",
+   "katman": "çekirdek",
+   "eserler": [
+    {
+     "ad": "Suyûtî (el-İtkân fî Ulûmi'l-Kur'ân)",
+     "ar": [
+      "الاتقان في علوم القران"
+     ]
+    },
+    {
+     "ad": "Zerkeşî (el-Burhân fî Ulûmi'l-Kur'ân)",
+     "ar": [
+      "البرهان في علوم القران"
+     ]
+    },
+    {
+     "ad": "İbnü'l-Cezerî (en-Neşr fi'l-Kırââti'l-Aşr)",
+     "ar": [
+      "النشر في القراءات العشر"
+     ]
+    },
+    {
+     "ad": "Ebû Amr ed-Dânî (et-Teysîr)",
+     "ar": [
+      "التيسير في القراءات السبع"
+     ]
+    },
+    {
+     "ad": "Nâsih-Mensûh / Müşkilü'l-Kur'ân",
+     "ar": [
+      "الناسخ والمنسوخ",
+      "مشكل القران"
+     ]
+    }
+   ]
+  },
+  {
+   "ad": "Akaid ve kelâm (Eş'arî-Mâtürîdî)",
+   "katman": "çekirdek",
+   "eserler": [
+    {
+     "ad": "Tahâvî (el-Akîdetü't-Tahâviyye) ve şerhleri",
+     "ar": [
+      "العقيده الطحاويه",
+      "شرح الطحاويه",
+      "متن الطحاويه"
+     ]
+    },
+    {
+     "ad": "Nesefî (el-Akâid) / Teftâzânî Şerhu'l-Akâid",
+     "ar": [
+      "العقائد النسفيه",
+      "شرح العقائد"
+     ],
+     "not": "Şâmile'de yalnız Nesefî'nin tefsiri/fıkıh eserleri var; el-Akâid ve Teftâzânî şerhi YOK (Eş'arî-Mâtürîdî okul metni)."
+    },
+    {
+     "ad": "Teftâzânî (Şerhu'l-Makâsıd)",
+     "ar": [
+      "شرح المقاصد"
+     ],
+     "not": "Teftâzânî'den yalnız et-Telvîh (usûl) var."
+    },
+    {
+     "ad": "Îcî / Cürcânî (el-Mevâkıf ve Şerhi)",
+     "ar": [
+      "شرح المواقف",
+      "المواقف في علم الكلام"
+     ],
+     "not": "Îcî'den yalnız Şerhu'l-Adud (usûl) ve tefsiri var; el-Mevâkıf YOK."
+    },
+    {
+     "ad": "Gazâlî (el-İktisâd fi'l-İ'tikâd)",
+     "ar": [
+      "الاقتصاد في الاعتقاد"
+     ]
+    },
+    {
+     "ad": "Cüveynî (el-Irşâd)",
+     "ar": [
+      "الارشاد الى قواطع الادله"
+     ],
+     "not": "Cüveynî'den Lum'u'l-Edille ve el-Verakât var; el-Irşâd YOK."
+    },
+    {
+     "ad": "Bâkıllânî (et-Temhîd)",
+     "ar": [
+      "تمهيد الاوائل"
+     ],
+     "not": ""
+    },
+    {
+     "ad": "Eş'arî (el-İbâne / Makâlâtü'l-İslâmiyyîn / el-Lüma')",
+     "ar": [
+      "الابانه عن اصول الديانه",
+      "مقالات الاسلاميين",
+      "اللمع في الرد"
+     ]
+    },
+    {
+     "ad": "Mâtürîdî (Kitâbü't-Tevhîd)",
+     "ar": [
+      "التوحيد للماتريدي",
+      "التوحيد"
+     ],
+     "yazar": [
+      "الماتريدي"
+     ]
+    },
+    {
+     "ad": "Ebu'l-Muîn en-Nesefî (Tabsıratü'l-Edille)",
+     "ar": [
+      "تبصره الادله"
+     ],
+     "not": "Nesefî Ebu'l-Muîn'in Tabsıra'sı YOK."
+    },
+    {
+     "ad": "Pezdevî (Usûlü'd-Dîn)",
+     "ar": [
+      "اصول الدين"
+     ],
+     "yazar": [
+      "البزدوي"
+     ],
+     "not": "Pezdevî'den yalnız usûl-i fıkıh (Keşfü'l-Esrâr şerhi) var; Usûlü'd-Dîn YOK."
+    },
+    {
+     "ad": "Beyhakî (el-İ'tikād ve'l-Hidâye)",
+     "ar": [
+      "الاعتقاد والهدايه"
+     ],
+     "not": "Beyhakî'den Şuabü'l-Îmân ve Sünen var; el-İ'tikād ve'l-Hidâye YOK."
+    },
+    {
+     "ad": "Fahreddîn er-Râzî (el-Erba'în fî Usûli'd-Dîn / Esâsü't-Takdîs)",
+     "ar": [
+      "معالم اصول الدين",
+      "الاربعين في اصول الدين",
+      "اساس التقديس"
+     ],
+     "not": ""
+    },
+    {
+     "ad": "Ebû Hanîfe (el-Fıkhu'l-Ekber) ve şerhi",
+     "ar": [
+      "الفقه الاكبر"
+     ]
+    },
+    {
+     "ad": "Sünûsî (Ümmü'l-Berâhîn) / Cevheretü't-Tevhîd",
+     "ar": [
+      "ام البراهين",
+      "جوهره التوحيد"
+     ],
+     "not": "Ümmü'l-Berâhîn/Cevheretü't-Tevhîd YOK (Mâlikî-Eş'arî ilmihâl akaidi)."
+    },
+    {
+     "ad": "Kâdî Iyâz (eş-Şifâ bi-Ta'rîfi Hukûki'l-Mustafâ)",
+     "ar": [
+      "الشفا بتعريف حقوق المصطفى"
+     ]
+    },
+    {
+     "ad": "Şehristânî (el-Milel ve'n-Nihal)",
+     "ar": [
+      "الملل والنحل"
+     ]
+    },
+    {
+     "ad": "Bağdâdî (el-Fark beyne'l-Fırak / Usûlü'd-Dîn)",
+     "ar": [
+      "الفرق بين الفرق"
+     ]
+    },
+    {
+     "ad": "İbn Hazm (el-Fisal fi'l-Milel)",
+     "ar": [
+      "الفصل في الملل"
+     ]
+    },
+    {
+     "ad": "Sâbûnî (el-Bidâye fî Usûli'd-Dîn)",
+     "ar": [
+      "البدايه من الكفايه"
+     ],
+     "not": "Sâbûnî'nin el-Bidâye'si YOK."
+    }
+   ]
+  },
+  {
+   "ad": "Hadis — Kütüb-i Sitte ve temel mecmualar",
+   "katman": "çekirdek",
+   "eserler": [
+    {
+     "ad": "Sahîh-i Buhârî",
+     "ar": [
+      "صحيح البخاري",
+      "الجامع المسند الصحيح"
+     ]
+    },
+    {
+     "ad": "Sahîh-i Müslim",
+     "ar": [
+      "صحيح مسلم",
+      "المسند الصحيح المختصر"
+     ]
+    },
+    {
+     "ad": "Sünen-i Tirmizî",
+     "ar": [
+      "سنن الترمذي",
+      "جامع الترمذي"
+     ]
+    },
+    {
+     "ad": "Sünen-i Ebû Dâvûd",
+     "ar": [
+      "سنن ابي داود"
+     ]
+    },
+    {
+     "ad": "Sünen-i Nesâî",
+     "ar": [
+      "سنن النسائي",
+      "المجتبى"
+     ]
+    },
+    {
+     "ad": "Sünen-i İbn Mâce",
+     "ar": [
+      "سنن ابن ماجه"
+     ]
+    },
+    {
+     "ad": "Muvatta (Mâlik)",
+     "ar": [
+      "الموطا"
+     ]
+    },
+    {
+     "ad": "Müsned-i Ahmed",
+     "ar": [
+      "مسند الامام احمد",
+      "مسند احمد"
+     ]
+    },
+    {
+     "ad": "Sünen-i Dârimî",
+     "ar": [
+      "سنن الدارمي",
+      "مسند الدارمي"
+     ]
+    },
+    {
+     "ad": "Sahîh-i İbn Hibbân",
+     "ar": [
+      "صحيح ابن حبان"
+     ]
+    },
+    {
+     "ad": "Sahîh-i İbn Huzeyme",
+     "ar": [
+      "صحيح ابن خزيمه"
+     ]
+    },
+    {
+     "ad": "Müstedrek (Hâkim)",
+     "ar": [
+      "المستدرك على الصحيحين"
+     ]
+    },
+    {
+     "ad": "Sünenü'l-Kübrâ (Beyhakî)",
+     "ar": [
+      "السنن الكبرى"
+     ]
+    },
+    {
+     "ad": "Mu'cemü'l-Kebîr / Evsat (Taberânî)",
+     "ar": [
+      "المعجم الكبير",
+      "المعجم الاوسط"
+     ]
+    },
+    {
+     "ad": "Musannef (Abdürrezzâk / İbn Ebî Şeybe)",
+     "ar": [
+      "المصنف"
+     ]
+    },
+    {
+     "ad": "Şerhu Meâni'l-Âsâr (Tahâvî)",
+     "ar": [
+      "شرح معاني الاثار"
+     ]
+    },
+    {
+     "ad": "Riyâzü's-Sâlihîn (Nevevî)",
+     "ar": [
+      "رياض الصالحين"
+     ]
+    },
+    {
+     "ad": "el-Erbaûn en-Neveviyye",
+     "ar": [
+      "الاربعين النوويه"
+     ]
+    },
+    {
+     "ad": "Mişkâtü'l-Mesâbîh",
+     "ar": [
+      "مشكاه المصابيح"
+     ]
+    },
+    {
+     "ad": "et-Terğîb ve't-Terhîb (Münzirî)",
+     "ar": [
+      "الترغيب والترهيب"
+     ]
+    },
+    {
+     "ad": "Bulûğu'l-Merâm (İbn Hacer)",
+     "ar": [
+      "بلوغ المرام"
+     ]
+    },
+    {
+     "ad": "el-Câmiu's-Sağîr / Feyzü'l-Kadîr (Suyûtî/Münâvî)",
+     "ar": [
+      "الجامع الصغير",
+      "فيض القدير"
+     ]
+    },
+    {
+     "ad": "Mecmaü'z-Zevâid (Heysemî)",
+     "ar": [
+      "مجمع الزوائد"
+     ]
+    }
+   ]
+  },
+  {
+   "ad": "Hadis şerhleri ve hadis ilimleri",
+   "katman": "çekirdek",
+   "eserler": [
+    {
+     "ad": "Fethu'l-Bârî (İbn Hacer)",
+     "ar": [
+      "فتح الباري"
+     ]
+    },
+    {
+     "ad": "Umdetü'l-Kârî (Aynî)",
+     "ar": [
+      "عمده القاري"
+     ]
+    },
+    {
+     "ad": "İrşâdü's-Sârî (Kastallânî)",
+     "ar": [
+      "ارشاد الساري"
+     ]
+    },
+    {
+     "ad": "Nevevî Şerhu Sahîh-i Müslim (el-Minhâc)",
+     "ar": [
+      "شرح النووي على مسلم"
+     ]
+    },
+    {
+     "ad": "Tuhfetü'l-Ahvezî",
+     "ar": [
+      "تحفه الاحوذي"
+     ]
+    },
+    {
+     "ad": "Avnü'l-Ma'bûd",
+     "ar": [
+      "عون المعبود"
+     ]
+    },
+    {
+     "ad": "Mirkâtü'l-Mefâtîh (Aliyyülkârî)",
+     "ar": [
+      "مرقاه المفاتيح"
+     ]
+    },
+    {
+     "ad": "Neylü'l-Evtâr (Şevkânî)",
+     "ar": [
+      "نيل الاوطار"
+     ]
+    },
+    {
+     "ad": "Subulü's-Selâm (San'ânî)",
+     "ar": [
+      "سبل السلام"
+     ]
+    },
+    {
+     "ad": "Nasbü'r-Râye (Zeylaî)",
+     "ar": [
+      "نصب الرايه"
+     ]
+    },
+    {
+     "ad": "Mukaddime (İbnü's-Salâh)",
+     "ar": [
+      "مقدمه ابن الصلاح",
+      "علوم الحديث"
+     ]
+    },
+    {
+     "ad": "Nüzhetü'n-Nazar (İbn Hacer)",
+     "ar": [
+      "نزهه النظر"
+     ]
+    },
+    {
+     "ad": "Tedrîbü'r-Râvî (Suyûtî)",
+     "ar": [
+      "تدريب الراوي"
+     ]
+    },
+    {
+     "ad": "Takrîbü't-Tehzîb / Tehzîbü't-Tehzîb (İbn Hacer)",
+     "ar": [
+      "تقريب التهذيب",
+      "تهذيب التهذيب"
+     ]
+    },
+    {
+     "ad": "Tehzîbü'l-Kemâl (Mizzî)",
+     "ar": [
+      "تهذيب الكمال"
+     ]
+    },
+    {
+     "ad": "Mîzânü'l-İ'tidâl (Zehebî)",
+     "ar": [
+      "ميزان الاعتدال"
+     ]
+    },
+    {
+     "ad": "el-Câmi' li-Ahlâkı'r-Râvî (Hatîb)",
+     "ar": [
+      "الجامع لاخلاق الراوي"
+     ]
+    },
+    {
+     "ad": "el-Kifâye fî İlmi'r-Rivâye (Hatîb)",
+     "ar": [
+      "الكفايه في علم الروايه"
+     ]
+    }
+   ]
+  },
+  {
+   "ad": "Fıkıh — dört mezhep ve karşılaştırmalı",
+   "katman": "geniş",
+   "eserler": [
+    {
+     "ad": "Hanefî: el-Hidâye (Merğînânî)",
+     "ar": [
+      "الهدايه شرح بدايه المبتدي",
+      "الهدايه في شرح"
+     ]
+    },
+    {
+     "ad": "Hanefî: Fethu'l-Kadîr (İbnü'l-Hümâm)",
+     "ar": [
+      "فتح القدير للكمال",
+      "شرح فتح القدير"
+     ]
+    },
+    {
+     "ad": "Hanefî: Reddü'l-Muhtâr (İbn Âbidîn)",
+     "ar": [
+      "رد المحتار"
+     ]
+    },
+    {
+     "ad": "Hanefî: Bedâi'u's-Sanâi' (Kâsânî)",
+     "ar": [
+      "بدائع الصنائع"
+     ]
+    },
+    {
+     "ad": "Hanefî: el-Mebsût (Serahsî)",
+     "ar": [
+      "المبسوط"
+     ],
+     "yazar": [
+      "السرخسي"
+     ]
+    },
+    {
+     "ad": "Hanefî: el-Bahru'r-Râik (İbn Nüceym)",
+     "ar": [
+      "البحر الرائق"
+     ]
+    },
+    {
+     "ad": "Hanefî: el-Lübâb / Muhtasarü'l-Kudûrî",
+     "ar": [
+      "اللباب في شرح الكتاب",
+      "مختصر القدوري"
+     ]
+    },
+    {
+     "ad": "Hanefî: Merâkı'l-Felâh / Hâşiyetü't-Tahtâvî",
+     "ar": [
+      "مراقي الفلاح"
+     ]
+    },
+    {
+     "ad": "Hanefî: el-Fetâvâ el-Hindiyye (Âlemgîriyye)",
+     "ar": [
+      "الفتاوى الهنديه"
+     ]
+    },
+    {
+     "ad": "Mâlikî: el-Müdevvene",
+     "ar": [
+      "المدونه"
+     ]
+    },
+    {
+     "ad": "Mâlikî: Muhtasar Halîl ve şerhleri (Mevâhib, Hattâb, Harşî)",
+     "ar": [
+      "مختصر خليل",
+      "مواهب الجليل",
+      "شرح مختصر خليل"
+     ]
+    },
+    {
+     "ad": "Mâlikî: Bidâyetü'l-Müctehid (İbn Rüşd)",
+     "ar": [
+      "بدايه المجتهد"
+     ]
+    },
+    {
+     "ad": "Mâlikî: er-Risâle (İbn Ebî Zeyd el-Kayrevânî)",
+     "ar": [
+      "رساله ابن ابي زيد",
+      "الرساله"
+     ],
+     "yazar": [
+      "القيرواني"
+     ]
+    },
+    {
+     "ad": "Mâlikî: eş-Şerhu'l-Kebîr / Hâşiyetü'd-Desûkî",
+     "ar": [
+      "حاشيه الدسوقي"
+     ]
+    },
+    {
+     "ad": "Şâfiî: el-Ümm",
+     "ar": [
+      "الام"
+     ],
+     "yazar": [
+      "الشافعي"
+     ]
+    },
+    {
+     "ad": "Şâfiî: el-Mecmû' (Nevevî)",
+     "ar": [
+      "المجموع شرح المهذب"
+     ]
+    },
+    {
+     "ad": "Şâfiî: Ravdatü't-Tâlibîn",
+     "ar": [
+      "روضه الطالبين"
+     ]
+    },
+    {
+     "ad": "Şâfiî: Minhâcü't-Tâlibîn / Muğni'l-Muhtâc",
+     "ar": [
+      "منهاج الطالبين",
+      "مغني المحتاج"
+     ]
+    },
+    {
+     "ad": "Şâfiî: Tuhfetü'l-Muhtâc / Nihâyetü'l-Muhtâc",
+     "ar": [
+      "تحفه المحتاج",
+      "نهايه المحتاج"
+     ]
+    },
+    {
+     "ad": "Şâfiî: Fethu'l-Mu'în / İ'âne / Gâyetü'l-İhtisâr",
+     "ar": [
+      "فتح المعين",
+      "اعانه الطالبين",
+      "غايه الاختصار"
+     ]
+    },
+    {
+     "ad": "Şâfiî: el-Hâvî (Mâverdî) / el-Vasît (Gazâlî)",
+     "ar": [
+      "الحاوي الكبير",
+      "الوسيط في المذهب"
+     ]
+    },
+    {
+     "ad": "Hanbelî: el-Muğnî (İbn Kudâme)",
+     "ar": [
+      "المغني"
+     ],
+     "yazar": [
+      "قدامه"
+     ]
+    },
+    {
+     "ad": "Hanbelî: Keşşâfü'l-Kınâ' / Şerhu Müntehe'l-İrâdât",
+     "ar": [
+      "كشاف القناع",
+      "شرح منتهى الارادات"
+     ]
+    },
+    {
+     "ad": "Hanbelî: Zâdü'l-Müstakni' / el-İnsâf",
+     "ar": [
+      "زاد المستقنع",
+      "الانصاف في معرفه الراجح"
+     ]
+    },
+    {
+     "ad": "Karşılaştırmalı: el-Fıkhu ale'l-Mezâhibi'l-Erbaa (Cezîrî)",
+     "ar": [
+      "الفقه على المذاهب الاربعه"
+     ]
+    },
+    {
+     "ad": "Karşılaştırmalı: el-Mevsûatü'l-Fıkhiyye el-Kuveytiyye",
+     "ar": [
+      "الموسوعه الفقهيه الكويتيه"
+     ],
+     "not": "Modern ansiklopedi; Şâmile'de farklı adla olabilir — anahtar bulunamadı."
+    },
+    {
+     "ad": "Karşılaştırmalı: Fıkhu's-Sünne (Sâbık)",
+     "ar": [
+      "فقه السنه"
+     ],
+     "not": "Modern eser; bulunamadı."
+    },
+    {
+     "ad": "Karşılaştırmalı: el-Muhallâ (İbn Hazm)",
+     "ar": [
+      "المحلى"
+     ]
+    },
+    {
+     "ad": "Karşılaştırmalı: el-Fıkhu'l-İslâmî ve Edilletühû (Zuhaylî)",
+     "ar": [
+      "الفقه الاسلامي وادلته"
+     ],
+     "not": "Modern eser; bulunamadı."
+    },
+    {
+     "ad": "Karşılaştırmalı: İhtilâfü'l-Fukahâ / el-İcmâ' (İbnü'l-Münzir)",
+     "ar": [
+      "الاجماع",
+      "الاشراف على مذاهب"
+     ]
+    }
+   ]
+  },
+  {
+   "ad": "Usûl-i fıkıh ve kâideler",
+   "katman": "geniş",
+   "eserler": [
+    {
+     "ad": "er-Risâle (Şâfiî)",
+     "ar": [
+      "الرساله"
+     ],
+     "yazar": [
+      "الشافعي"
+     ]
+    },
+    {
+     "ad": "el-Müstasfâ (Gazâlî)",
+     "ar": [
+      "المستصفى"
+     ]
+    },
+    {
+     "ad": "el-Burhân (Cüveynî)",
+     "ar": [
+      "البرهان في اصول الفقه"
+     ]
+    },
+    {
+     "ad": "el-Mahsûl (Râzî)",
+     "ar": [
+      "المحصول"
+     ]
+    },
+    {
+     "ad": "el-Muvâfakât (Şâtıbî)",
+     "ar": [
+      "الموافقات"
+     ]
+    },
+    {
+     "ad": "el-Fusûl fi'l-Usûl (Cessâs)",
+     "ar": [
+      "الفصول في الاصول"
+     ]
+    },
+    {
+     "ad": "Keşfü'l-Esrâr (Pezdevî şerhi)",
+     "ar": [
+      "كشف الاسرار"
+     ]
+    },
+    {
+     "ad": "el-İhkâm fî Usûli'l-Ahkâm (Âmidî)",
+     "ar": [
+      "الاحكام في اصول الاحكام"
+     ]
+    },
+    {
+     "ad": "İrşâdü'l-Fuhûl (Şevkânî)",
+     "ar": [
+      "ارشاد الفحول"
+     ]
+    },
+    {
+     "ad": "el-Eşbâh ve'n-Nezâir (Suyûtî / İbn Nüceym)",
+     "ar": [
+      "الاشباه والنظائر"
+     ]
+    },
+    {
+     "ad": "el-Kavâid (İbn Receb / Karâfî el-Furûk)",
+     "ar": [
+      "القواعد",
+      "الفروق"
+     ]
+    },
+    {
+     "ad": "İ'lâmü'l-Muvakkıîn (İbn Kayyim)",
+     "ar": [
+      "اعلام الموقعين"
+     ]
+    }
+   ]
+  },
+  {
+   "ad": "Siyer ve şemâil",
+   "katman": "geniş",
+   "eserler": [
+    {
+     "ad": "es-Sîre en-Nebeviyye (İbn Hişâm)",
+     "ar": [
+      "سيرة ابن هشام",
+      "السيرة النبوية"
+     ],
+     "yazar": [
+      "هشام"
+     ]
+    },
+    {
+     "ad": "et-Tabakâtü'l-Kübrâ (İbn Sa'd)",
+     "ar": [
+      "الطبقات الكبرى"
+     ],
+     "yazar": [
+      "سعد"
+     ]
+    },
+    {
+     "ad": "Zâdü'l-Me'âd (İbn Kayyim)",
+     "ar": [
+      "زاد المعاد"
+     ]
+    },
+    {
+     "ad": "Dalâilü'n-Nübüvve (Beyhakî / Ebû Nuaym)",
+     "ar": [
+      "دلائل النبوه"
+     ]
+    },
+    {
+     "ad": "el-Mevâhibü'l-Ledünniyye (Kastallânî)",
+     "ar": [
+      "المواهب اللدنيه"
+     ]
+    },
+    {
+     "ad": "Subulü'l-Hüdâ ve'r-Reşâd (Sâlihî eş-Şâmî)",
+     "ar": [
+      "سبل الهدى والرشاد"
+     ]
+    },
+    {
+     "ad": "es-Sîretü'l-Halebiyye (İnsânü'l-Uyûn)",
+     "ar": [
+      "السيره الحلبيه",
+      "انسان العيون"
+     ]
+    },
+    {
+     "ad": "eş-Şemâilü'l-Muhammediyye (Tirmizî)",
+     "ar": [
+      "الشمائل المحمديه"
+     ]
+    },
+    {
+     "ad": "el-Hasâisü'l-Kübrâ (Suyûtî)",
+     "ar": [
+      "الخصائص الكبرى"
+     ]
+    },
+    {
+     "ad": "el-Megâzî (Vâkıdî)",
+     "ar": [
+      "المغازي"
+     ]
+    },
+    {
+     "ad": "er-Rahîku'l-Mahtûm",
+     "ar": [
+      "الرحيق المختوم"
+     ]
+    },
+    {
+     "ad": "el-Bidâye ve'n-Nihâye (İbn Kesîr; yaratılıştan siyere)",
+     "ar": [
+      "البدايه والنهايه"
+     ]
+    },
+    {
+     "ad": "Üsdü'l-Gâbe / el-İsâbe (sahâbe tabakâtı)",
+     "ar": [
+      "اسد الغابه",
+      "الاصابه في تمييز الصحابه"
+     ]
+    },
+    {
+     "ad": "Şifâ-i Şerîf şerhleri (Aliyyülkârî, Hafâcî)",
+     "ar": [
+      "نسيم الرياض",
+      "شرح الشفا"
+     ]
+    }
+   ]
+  },
+  {
+   "ad": "İslâm tarihi ve kıssa-i enbiyâ",
+   "katman": "tarih",
+   "eserler": [
+    {
+     "ad": "Taberî Tarihi (Târîhu'r-Rusül ve'l-Mülûk)",
+     "ar": [
+      "تاريخ الرسل والملوك",
+      "تاريخ الطبري"
+     ]
+    },
+    {
+     "ad": "el-Kâmil fi't-Târîh (İbnü'l-Esîr)",
+     "ar": [
+      "الكامل في التاريخ"
+     ]
+    },
+    {
+     "ad": "Târîhu'l-İslâm (Zehebî)",
+     "ar": [
+      "تاريخ الاسلام"
+     ]
+    },
+    {
+     "ad": "Siyeru A'lâmi'n-Nübelâ (Zehebî)",
+     "ar": [
+      "سير اعلام النبلاء"
+     ]
+    },
+    {
+     "ad": "Târîhu Dımaşk (İbn Asâkir)",
+     "ar": [
+      "تاريخ دمشق"
+     ]
+    },
+    {
+     "ad": "Târîhu Bağdâd (Hatîb el-Bağdâdî)",
+     "ar": [
+      "تاريخ بغداد"
+     ]
+    },
+    {
+     "ad": "el-Müntazam (İbnü'l-Cevzî)",
+     "ar": [
+      "المنتظم في تاريخ"
+     ]
+    },
+    {
+     "ad": "Mürûcü'z-Zeheb (Mes'ûdî)",
+     "ar": [
+      "مروج الذهب"
+     ],
+     "not": "Mes'ûdî'den yalnız et-Tenbîh ve'l-İşrâf ile Ahbârü'z-Zamân var; Mürûcü'z-Zeheb YOK."
+    },
+    {
+     "ad": "Mukaddime / Târîh (İbn Haldûn)",
+     "ar": [
+      "مقدمه ابن خلدون",
+      "تاريخ ابن خلدون",
+      "العبر وديوان المبتدا"
+     ]
+    },
+    {
+     "ad": "Târîhu'l-Hulefâ (Suyûtî)",
+     "ar": [
+      "تاريخ الخلفاء"
+     ]
+    },
+    {
+     "ad": "Vefeyâtü'l-A'yân (İbn Hallikân)",
+     "ar": [
+      "وفيات الاعيان"
+     ]
+    },
+    {
+     "ad": "el-Vâfî bi'l-Vefeyât (Safedî)",
+     "ar": [
+      "الوافي بالوفيات"
+     ]
+    },
+    {
+     "ad": "Şezerâtü'z-Zeheb (İbnü'l-İmâd)",
+     "ar": [
+      "شذرات الذهب"
+     ]
+    },
+    {
+     "ad": "el-Hıtat (Makrîzî) / es-Sülûk",
+     "ar": [
+      "المواعظ والاعتبار",
+      "السلوك لمعرفه دول"
+     ]
+    },
+    {
+     "ad": "Bedâi'u'z-Zühûr (İbn İyâs)",
+     "ar": [
+      "بدائع الزهور"
+     ],
+     "not": "İbn İyâs YOK (Memlûk dönemi tarihi)."
+    },
+    {
+     "ad": "Mu'cemü'l-Büldân (Yâkût)",
+     "ar": [
+      "معجم البلدان"
+     ]
+    },
+    {
+     "ad": "Kısasü'l-Enbiyâ (İbn Kesîr / Sa'lebî / Nüccâr)",
+     "ar": [
+      "قصص الانبياء"
+     ]
+    },
+    {
+     "ad": "Arâisü'l-Mecâlis (Sa'lebî)",
+     "ar": [
+      "عرائس المجالس"
+     ],
+     "not": "Sa'lebî'den tefsiri (el-Keşf ve'l-Beyân) var; Arâis YOK."
+    },
+    {
+     "ad": "Ensâbü'l-Eşrâf (Belâzürî) / Fütûhu'l-Büldân",
+     "ar": [
+      "انساب الاشراف",
+      "فتوح البلدان"
+     ]
+    },
+    {
+     "ad": "Târîhu'l-Hamîs / el-Hulefâ er-Râşidûn",
+     "ar": [
+      "تاريخ الخميس"
+     ]
+    }
+   ]
+  },
+  {
+   "ad": "Tasavvuf ve ahlâk",
+   "katman": "geniş",
+   "eserler": [
+    {
+     "ad": "Kuşeyrî (er-Risâletü'l-Kuşeyriyye)",
+     "ar": [
+      "الرساله القشيريه"
+     ]
+    },
+    {
+     "ad": "Gazâlî (İhyâü Ulûmi'd-Dîn)",
+     "ar": [
+      "احياء علوم الدين"
+     ]
+    },
+    {
+     "ad": "Gazâlî (Mîzânü'l-Amel / Minhâcü'l-Âbidîn / Bidâyetü'l-Hidâye / Mişkâtü'l-Envâr)",
+     "ar": [
+      "ميزان العمل",
+      "منهاج العابدين",
+      "بدايه الهدايه",
+      "مشكاه الانوار"
+     ]
+    },
+    {
+     "ad": "Ebû Nuaym (Hilyetü'l-Evliyâ)",
+     "ar": [
+      "حليه الاولياء"
+     ]
+    },
+    {
+     "ad": "Sülemî (Tabakâtü's-Sûfiyye)",
+     "ar": [
+      "طبقات الصوفيه"
+     ]
+    },
+    {
+     "ad": "Serrâc (el-Lüma' fi't-Tasavvuf)",
+     "ar": [
+      "اللمع في التصوف"
+     ],
+     "not": "Serrâc'ın el-Lüma'ı YOK (Sülemî'nin bazı risâleleri var)."
+    },
+    {
+     "ad": "Ebû Tâlib el-Mekkî (Kûtü'l-Kulûb)",
+     "ar": [
+      "قوت القلوب"
+     ]
+    },
+    {
+     "ad": "Kelâbâzî (et-Ta'arruf li-Mezhebi Ehli't-Tasavvuf)",
+     "ar": [
+      "التعرف لمذهب اهل التصوف"
+     ]
+    },
+    {
+     "ad": "Herevî (Menâzilü's-Sâirîn)",
+     "ar": [
+      "منازل السائرين"
+     ]
+    },
+    {
+     "ad": "İbn Kayyim (Medâricü's-Sâlikîn)",
+     "ar": [
+      "مدارج السالكين"
+     ]
+    },
+    {
+     "ad": "Sühreverdî (Avârifü'l-Me'ârif)",
+     "ar": [
+      "عوارف المعارف"
+     ],
+     "not": "Avârifü'l-Me'ârif YOK."
+    },
+    {
+     "ad": "İbn Atâillah (el-Hikem; Letâifü'l-Minen) ve şerhleri",
+     "ar": [
+      "الحكم العطائيه",
+      "لطائف المنن",
+      "شرح الحكم",
+      "ايقاظ الهمم"
+     ],
+     "not": "el-Hikem, Letâifü'l-Minen ve şerhleri YOK — Mimar'ın tasavvuf önceliği için kritik."
+    },
+    {
+     "ad": "İbn Arabî (el-Fütûhâtü'l-Mekkiyye)",
+     "ar": [
+      "الفتوحات المكيه"
+     ],
+     "not": "YOK (yalnız İbn Arabî'yi reddeden eserler var: ör. Bikâî Masra'ut-Tasavvuf). Mimar'ın kararı: İbn Arabî tasavvuf ve Ehl-i Sünnet çizgisi değerlendirmesi."
+    },
+    {
+     "ad": "İbn Arabî (Fusûsü'l-Hikem) ve şerhleri",
+     "ar": [
+      "فصوص الحكم"
+     ],
+     "not": "YOK (yalnız reddiyeler)."
+    },
+    {
+     "ad": "Abdülkâdir Geylânî (Gunyetü't-Tâlibîn / el-Fethu'r-Rabbânî / Fütûhu'l-Gayb)",
+     "ar": [
+      "الغنيه لطالبي طريق الحق",
+      "الفتح الرباني",
+      "فتوح الغيب"
+     ]
+    },
+    {
+     "ad": "Şa'rânî (et-Tabakâtü'l-Kübrâ / el-Yevâkît ve'l-Cevâhir)",
+     "ar": [
+      "الطبقات الكبرى"
+     ],
+     "yazar": [
+      "الشعراني"
+     ],
+     "not": "Şa'rânî (et-Tabakât, el-Yevâkît) YOK."
+    },
+    {
+     "ad": "Nablusî (el-Hadîkatü'n-Nediyye / Şerhu Mesnevî / Tasavvuf eserleri)",
+     "ar": [
+      "الحديقه الندييه",
+      "الحديقه الندية"
+     ],
+     "not": "Nablusî'den yalnız Ta'tîrü'l-Enâm (rüya tabiri) var."
+    },
+    {
+     "ad": "Mevlânâ (Mesnevî / Dîvân-ı Kebîr — Arapça çeviri/şerh)",
+     "ar": [
+      "المثنوي",
+      "مثنوي"
+     ],
+     "not": "Mevlânâ'nın Mesnevî/Dîvân'ı (Farsça) ve Arapça çevirisi YOK."
+    },
+    {
+     "ad": "Hârisü'l-Muhâsibî (er-Riâye li-Hukûkıllâh)",
+     "ar": [
+      "الرعايه لحقوق الله"
+     ]
+    },
+    {
+     "ad": "Cüneyd / Bistâmî / Hallâc / Hakîm Tirmizî (Hatmü'l-Evliyâ)",
+     "ar": [
+      "ختم الاولياء"
+     ],
+     "not": "Hakîm Tirmizî'den başka eserler var (Nevâdirü'l-Usûl, Rıyâdetü'n-Nefs); Hatmü'l-Evliyâ YOK."
+    },
+    {
+     "ad": "Ahmed Zerrûk / Şâzelî (Kavâidü't-Tasavvuf)",
+     "ar": [
+      "قواعد التصوف"
+     ],
+     "not": "Zerrûk'tan Uddetü'l-Mürîd var; Kavâidü't-Tasavvuf YOK."
+    },
+    {
+     "ad": "Zühd: İbnü'l-Mübârek / Ahmed b. Hanbel (Kitâbü'z-Zühd)",
+     "ar": [
+      "كتاب الزهد",
+      "الزهد"
+     ]
+    },
+    {
+     "ad": "İbn Kayyim (el-Fevâid / el-Vâbilü's-Sayyib / Ravdatü'l-Muhibbîn)",
+     "ar": [
+      "الفوائد",
+      "الوابل الصيب",
+      "روضه المحبين"
+     ]
+    },
+    {
+     "ad": "İbnü'l-Cevzî (Sıfatü's-Safve / Telbîsü İblîs)",
+     "ar": [
+      "صفه الصفوه",
+      "تلبيس ابليس"
+     ]
+    },
+    {
+     "ad": "Mâverdî (Edebü'd-Dünyâ ve'd-Dîn)",
+     "ar": [
+      "ادب الدنيا والدين"
+     ]
+    },
+    {
+     "ad": "İbn Ebi'd-Dünyâ (Mekârimü'l-Ahlâk / Kitâbü't-Tevbe)",
+     "ar": [
+      "مكارم الاخلاق",
+      "التوبه"
+     ]
+    },
+    {
+     "ad": "Buhârî (el-Edebü'l-Müfred)",
+     "ar": [
+      "الادب المفرد"
+     ]
+    },
+    {
+     "ad": "Beyhakî (Şu'abü'l-Îmân)",
+     "ar": [
+      "شعب الايمان"
+     ]
+    },
+    {
+     "ad": "Halîmî (el-Minhâc fî Şu'abi'l-Îmân)",
+     "ar": [
+      "المنهاج في شعب الايمان"
+     ]
+    },
+    {
+     "ad": "Sülemî (Âdâbü's-Suhbe, Fütüvvet, el-Erba'în fi't-Tasavvuf)",
+     "ar": [
+      "الفتوه",
+      "اداب الصحبه",
+      "الاربعون في التصوف",
+      "الاربعين في التصوف"
+     ]
+    },
+    {
+     "ad": "Hakîm Tirmizî (Nevâdirü'l-Usûl / Rıyâdetü'n-Nefs)",
+     "ar": [
+      "نوادر الاصول",
+      "رياضه النفس"
+     ]
+    },
+    {
+     "ad": "Hârisü'l-Muhâsibî (Fehmü'l-Kur'ân / et-Tevehhüm)",
+     "ar": [
+      "فهم القران",
+      "التوهم"
+     ]
+    },
+    {
+     "ad": "Zerrûk (Uddetü'l-Mürîd es-Sâdık)",
+     "ar": [
+      "عده المريد الصادق"
+     ]
+    }
+   ]
+  }
+ ],
+ "okul_yazar_anahtarlari": {
+  "Eş'arî / Mâtürîdî / Şâfiî-Mâlikî-Hanefî kelâm çizgisi": [
+   "الغزالي",
+   "الباقلاني",
+   "الجويني",
+   "الماتريدي",
+   "الفخر الرازي",
+   "الإيجي",
+   "التفتازاني",
+   "البيهقي",
+   "النسفي",
+   "السنوسي",
+   "الحليمي",
+   "البغدادي",
+   "الشهرستاني",
+   "الأشعري",
+   "القشيري",
+   "ابن فورك",
+   "الإسفراييني",
+   "الكوثري",
+   "اللقاني",
+   "البزدوي",
+   "الصابوني",
+   "الزبيدي",
+   "السبكي",
+   "ابن عساكر",
+   "الحارث المحاسبي"
+  ],
+  "Selefî-Hanbelî / Necid çizgisi": [
+   "ابن تيمية",
+   "ابن القيم",
+   "محمد بن عبد الوهاب",
+   "آل الشيخ",
+   "الألباني",
+   "ابن باز",
+   "ابن عثيمين",
+   "السعدي",
+   "المعلمي",
+   "ابن أبي العز",
+   "السفاريني",
+   "الفوزان",
+   "ابن قاسم",
+   "آل معمر",
+   "الذهبي",
+   "ابن رجب"
+  ]
+ }
+}

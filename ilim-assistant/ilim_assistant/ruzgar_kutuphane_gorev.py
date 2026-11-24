@@ -582,7 +582,12 @@ def format_kutuphane_extractive_reply(
             if not src or src in seen:
                 continue
             seen.add(src)
-            lines.append(f"[K{i}] {src}")
+            try:
+                from ilim_assistant.ruzgar_kunye import label_for_source
+
+                lines.append(f"[K{i}] {label_for_source(src)}")
+            except Exception:
+                lines.append(f"[K{i}] {src}")
     return "\n".join(lines).strip()
 
 
@@ -614,11 +619,33 @@ _RAW_PASSAGE_RE = re.compile(
 )
 
 
+# K3/D1: din/âlim sorusunda yalın «kaynak göster / kaynağını göster» ham pasaj değil, **künyeli kaynaklı cevap** demektir
+# (eser · müellif · bölüm). Ham metin yalnız açık «pasajı/aslını/orijinal metni göster-oku» isteğinde.
+_RAW_PASSAGE_STRICT_RE = re.compile(
+    r"(?:"
+    r"pasaj[ıi]?\s+(?:oku|goster)|pasaj\w*\s+oku|"
+    r"aslin[ıi]?\s+goster|asl[ıi]\s+(?:metn|hali)\w*|asil\s+metn\w*|"
+    r"ham\s+metn\w*|orijinal\s+metn\w*|metnin\s+kendisi|kaynak\s+metn\w*|"
+    r"ilgili\s+pasaj\w*|ilgili\s+kisim\w*\s+(?:oku|goster)|"
+    r"kitaptan\s+(?:oku|aynen)|aynen\s+(?:oku|goster|aktar|yaz)"
+    r")"
+)
+
+
 def user_wants_raw_passage(message: str) -> bool:
-    """Açık «kaynağı göster / pasajı oku / aslını göster» isteği (ham metin yalnız bu halde)."""
+    """Açık «kaynağı göster / pasajı oku / aslını göster» isteği (ham metin yalnız bu halde).
+
+    Din/âlim sorusunda (K3) yalın «kaynak göster» ham döküm sayılmaz → künyeli sentez.
+    Kapat (eski davranış): RUZGAR_K3_DIN_SORGU=0.
+    """
     low = _fold(message)
     if not low:
         return False
+    try:
+        if os.environ.get("RUZGAR_K3_DIN_SORGU", "1").strip().lower() not in ("0", "false", "no", "off") and din_alani_sorusu(message):
+            return bool(_RAW_PASSAGE_STRICT_RE.search(low))
+    except Exception:
+        pass
     return bool(_RAW_PASSAGE_RE.search(low))
 
 

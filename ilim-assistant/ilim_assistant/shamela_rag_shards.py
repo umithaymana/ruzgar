@@ -473,6 +473,53 @@ def cleanup_building(cat: str) -> None:
         shutil.rmtree(d, ignore_errors=True)
 
 
+def _k3_phrase_rows(
+    chunks_path: Path,
+    offsets: np.ndarray,
+    terms: Sequence[str],
+    *,
+    cap: int = 4000,
+    deadline: float | None = None,
+) -> np.ndarray:
+    """K3 kelime tabanlı arama: chunks.jsonl üzerinde birebir bayt öbeği (mmap.find, C hızı) → satır indeksleri.
+
+    Her parça en çok bir kez sayılır (eşleşmeden sonra sonraki satıra atlanır). Süre sınırı aşılırsa kalanı bırakılır.
+    """
+    import mmap
+
+    rows: set[int] = set()
+    n_lines = int(len(offsets))
+    if n_lines == 0 or not terms:
+        return np.zeros((0,), dtype=np.int64)
+    try:
+        with chunks_path.open("rb") as f:
+            mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+            try:
+                for t in terms:
+                    tb = t.encode("utf-8")
+                    if not tb:
+                        continue
+                    pos = 0
+                    n = 0
+                    while n < cap:
+                        if deadline is not None and time.monotonic() > deadline:
+                            break
+                        i = mm.find(tb, pos)
+                        if i < 0:
+                            break
+                        r = int(np.searchsorted(offsets, i, side="right")) - 1
+                        if r < 0:
+                            r = 0
+                        rows.add(r)
+                        n += 1
+                        pos = int(offsets[r + 1]) if r + 1 < n_lines else len(mm)
+            finally:
+                mm.close()
+    except Exception:
+        pass
+    return np.fromiter(rows, dtype=np.int64, count=len(rows)) if rows else np.zeros((0,), dtype=np.int64)
+
+
 def _read_chunk_at(chunks_path: Path, offsets: np.ndarray, i: int) -> Chunk | None:
     try:
         with chunks_path.open("rb") as f:
@@ -575,8 +622,11 @@ def pick_shamela_cats_for_query(
     max_cats: int | None = None,
     deep: bool = False,
     exclude: Sequence[str] | None = None,
+    prefer: Sequence[str] | None = None,
 ) -> list[str]:
     """Sorguya göre en fazla N hazır shard seç (bellek/süre koruması).
+
+    K3: ``prefer`` = terim sözlüğünden gelen (veri) kategori ipuçları; verilirse kodlanmış ipuçlarından ÖNCE denenir.
 
     F2.2 deep=True → daha geniş kategori/MB; exclude ile kademe-1 cats atlanır.
     """
@@ -671,6 +721,26 @@ def pick_shamela_cats_for_query(
         used_bytes += sz
         return len(picked) >= max_cats
 
+    # K3: sözlük (veri) ipucu — kodlanmış ipuçlarından önce. Boyut/MB bütçesi aynen geçerli.
+    if prefer:
+        try:
+            k3_max = int(os.environ.get("RUZGAR_K3_MAX_CATS", "4") or "4")
+        except ValueError:
+            k3_max = 4
+        cap = max_cats if deep else max(max_cats, k3_max)
+        for cat in [c for c in prefer if c in ready_keys]:
+            if len(picked) >= cap:
+                break
+            if cat in picked:
+                continue
+            sz = _emb_size(cat)
+            if picked and used_bytes + sz > max_bytes:
+                continue
+            picked.append(cat)
+            used_bytes += sz
+        if picked:
+            return picked[:cap]
+
     # Kitap adı geçiyorsa ilgili büyük sunen shard zorunlu (yoksa yanlış ince shard)
     if any(k in low for k in ("buhari", "buhârî", "muslim", "muslum", "müslim", "sahih")):
         _add("06_hadis_sunen", force=True)
@@ -753,8 +823,13 @@ def search_shamela_shards(
     deep: bool = False,
     budget_sec: float | None = None,
     exclude_cats: Sequence[str] | None = None,
+    k3: object | None = None,
 ) -> List[Tuple[str, str, float]]:
     """Hazır shard'larda mmap kosinüs; sorguya göre az kategori + süre bütçesi.
+
+    K3 (``k3`` = ``ruzgar_k3_sorgu.K3Plan``): sorgu kaynak dilinde (Arapça) yeniden yazılır; skorlama bu sorgularla
+    yapılır (Türkçe sorgu vektörü Arapça gövdeye yanlış yakın çıkıyordu); aday parçalar Arapça anahtar terimlerle
+    kelime tabanlı yeniden sıralanır. Bütçe/mmap/shard seçimi aynen korunur.
 
     F2.2 deep=True: kalan tur süresinden ikinci kademe (daha çok kategori).
     """
@@ -762,9 +837,15 @@ def search_shamela_shards(
     ready = dict(reg.get("ready") or {})
     if not ready:
         return []
+    _k3_on = bool(
+        k3 is not None
+        and getattr(k3, "aktif", False)
+        and (getattr(k3, "sorgular", {}) or {}).get(getattr(k3, "hedef_dil", "ar"))
+    )
     if cats is None:
         use = pick_shamela_cats_for_query(
-            query, ready, deep=deep, exclude=exclude_cats
+            query, ready, deep=deep, exclude=exclude_cats,
+            prefer=(getattr(k3, "kategoriler", None) if _k3_on else None),
         )
     else:
         _ex = {str(x) for x in (exclude_cats or []) if x}
@@ -816,18 +897,32 @@ def search_shamela_shards(
     budget = max(4.0, min(45.0, budget))
 
     # Embedder yükü bütçeye dahil edilmez (yoksa 6sn dolup 0 hit dönüyordu)
-    if q_vec is None:
-        model = _get_embedder()
-        q_vec = np.asarray(
-            model.encode([query], normalize_embeddings=True, show_progress_bar=False)[0],
-            dtype=np.float32,
-        )
-    else:
-        q_vec = np.asarray(q_vec, dtype=np.float32)
+    q_mat = None  # K3: (384, k) kaynak-dil sorgu matrisi
+    if _k3_on:
+        try:
+            _qs = list(k3.sorgular[k3.hedef_dil])[:6]  # type: ignore[union-attr]
+            model = _get_embedder()
+            q_mat = np.asarray(
+                model.encode(_qs, normalize_embeddings=True, show_progress_bar=False), dtype=np.float32
+            ).T
+        except Exception:
+            q_mat = None
+            _k3_on = False
+    if q_mat is None:
+        if q_vec is None:
+            model = _get_embedder()
+            q_vec = np.asarray(
+                model.encode([query], normalize_embeddings=True, show_progress_bar=False)[0],
+                dtype=np.float32,
+            )
+        else:
+            q_vec = np.asarray(q_vec, dtype=np.float32)
 
     t0 = time.monotonic()
     tk = max(1, int(top_k))
     per_shard = max(tk, min(12, tk * 2))
+    if _k3_on:
+        per_shard = max(per_shard, 20)  # kelime tabanlı yeniden sıralama için geniş aday havuzu
     best: dict[tuple[str, str], Tuple[str, str, float]] = {}
 
     block = int(os.environ.get("RUZGAR_SHAMELA_SCORE_BLOCK", "65536") or "65536")
@@ -858,7 +953,10 @@ def search_shamela_shards(
             if blocks_done >= 1 and time.monotonic() - t0 > budget:
                 break
             end = min(start + block, n)
-            sims = emb[start:end] @ q_vec
+            if q_mat is not None:
+                sims = (emb[start:end] @ q_mat).max(axis=1)
+            else:
+                sims = emb[start:end] @ q_vec
             take = min(per_shard, end - start)
             if take <= 0:
                 continue
@@ -867,6 +965,27 @@ def search_shamela_shards(
                 cand_idx.append(start + int(j))
                 cand_sc.append(float(sims[int(j)]))
             blocks_done += 1
+        # K3: kelime tabanlı (birebir öbek) adaylar — yoğun aramanın kaçırdığı terim isabetleri
+        if _k3_on and q_mat is not None and getattr(k3, "kelime_terimleri", None):
+            try:
+                _rows = _k3_phrase_rows(
+                    ch_p, offsets, list(k3.kelime_terimleri), deadline=t0 + budget  # type: ignore[union-attr]
+                )
+                if _rows.size:
+                    _kw_sc = (emb[_rows] @ q_mat).max(axis=1)
+                    _o = np.argsort(-_kw_sc)[:40]
+                    for _j in _o:
+                        ii = int(_rows[int(_j)])
+                        sc = float(_kw_sc[int(_j)])
+                        ch = _read_chunk_at(ch_p, offsets, ii)
+                        if ch is None:
+                            continue
+                        key = (ch.source, (ch.text or "")[:96])
+                        prev = best.get(key)
+                        if prev is None or sc > prev[2]:
+                            best[key] = (ch.text, ch.source, sc)
+            except Exception:
+                pass
         if not cand_idx:
             continue
         order = np.argsort(-np.asarray(cand_sc))[:per_shard]
@@ -882,6 +1001,34 @@ def search_shamela_shards(
                 best[key] = (ch.text, ch.source, sc)
 
     ranked = sorted(best.values(), key=lambda h: h[2], reverse=True)
+    if _k3_on:
+        try:
+            from ilim_assistant.ruzgar_k3_sorgu import lex_skor
+
+            try:
+                _gate_min = float(os.environ.get("RUZGAR_K3_DENSE_ONLY_MIN", "0.55") or "0.55")
+            except ValueError:
+                _gate_min = 0.55
+            _scored = []
+            for text, src, sc in ranked:
+                bonus, nhit = lex_skor(text, k3, hedef_dil=getattr(k3, "hedef_dil", "ar"))
+                _scored.append((text, src, float(sc) + bonus, nhit))
+            _with = [x for x in _scored if x[3] > 0]
+            # kelime kapısı: terim taşıyan parça varsa terimsiz olanlar yalnız çok güçlü anlamsal skorla kalır
+            if _with:
+                _scored = _with + [x for x in _scored if x[3] == 0 and x[2] >= _gate_min]
+            else:
+                _scored = [x for x in _scored if x[2] >= _gate_min]
+            _scored.sort(key=lambda x: (x[3], x[2]), reverse=True)
+            try:
+                from ilim_assistant.ruzgar_tur_teshis_f0 import note_k3
+
+                note_k3({**k3.ozet(), "aday": len(ranked), "lexik_isabet": len(_with), "donen": min(len(_scored), tk)})  # type: ignore[union-attr]
+            except Exception:
+                pass
+            return [(t, s_, sc) for t, s_, sc, _n in _scored][:tk]
+        except Exception:
+            pass
     # Lexik bonus: soru kelimesi geçen parçayı öne al (yanlış semantik komşu ezmesin)
     try:
         qf = _fold_simple(query)

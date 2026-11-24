@@ -440,6 +440,24 @@ def _casual_weak_fuzzy_hafiza_hint(message: str, hint: dict[str, Any] | None) ->
     return float(hint.get("skor") or 0.0) < 0.9
 
 
+def _is_miss_or_timeout_reply(text: str) -> bool:
+    """Geçmişteki «bulamadım / süre yetmedi» cevabı hafıza SAYILMAZ (aynı soru sonsuza dek kaçmasın)."""
+    t = (text or "").strip()
+    if not t:
+        return False
+    try:
+        from ilim_assistant.ruzgar_umed_kurallari import MISS_PHRASE, TIMEOUT_PHRASE
+
+        if MISS_PHRASE in t or TIMEOUT_PHRASE in t:
+            return True
+    except Exception:
+        pass
+    low = t.lower()
+    if "bulamadım" in low and ("öğret" in low or "ogret" in low):
+        return True
+    return "süre yetmedi" in low or "sure yetmedi" in low
+
+
 def lookup_chat_history_person_hint(
     message: str,
     client_history: list | None = None,
@@ -468,6 +486,8 @@ def lookup_chat_history_person_hint(
                 continue
             if assistant.startswith("["):
                 continue
+            if _is_miss_or_timeout_reply(assistant):
+                continue
             skor = 0.74 if variant == (message or "").strip() else 0.7
             if best is None or skor > float(best.get("skor") or 0.0):
                 best = {
@@ -494,7 +514,7 @@ def lookup_chat_history_person_hint(
                     if not var_norm or len(var_norm) < 4:
                         continue
                     if var_norm in user_norm or user_norm in var_norm:
-                        if content and len(content) >= 16:
+                        if content and len(content) >= 16 and not _is_miss_or_timeout_reply(content):
                             return {
                                 "cevap": content[:2400],
                                 "soru": pending_user,

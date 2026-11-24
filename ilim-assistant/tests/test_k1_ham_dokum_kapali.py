@@ -143,13 +143,35 @@ def test_yonerge_bayrakla_eski_metne_doner(monkeypatch):
 # --- 5) uçtan uca: prepare_turn ---------------------------------------------------------------
 
 
+_ILGISIZ_HIT = [
+    (
+        "Güneş Sistemi sekiz gezegenden oluşur; Merkür Güneş'e en yakın gezegendir ve yörüngesi "
+        "en kısa olandır. Dünya üçüncü gezegendir.",
+        "knowledge/ilim/gokbilim/gunes_sistemi.md",
+        0.55,
+    )
+]
+
+
+@pytest.fixture
+def _hermetik_arama(monkeypatch):
+    """Gerçek indeksten bağımsız: «Elektroliz» için yalnız ilgisiz bir bulgu döner (K1 senaryosu)."""
+    from ilim_assistant import rag_store
+
+    monkeypatch.setattr(rag_store, "search", lambda q, top_k=5: list(_ILGISIZ_HIT))
+    monkeypatch.setattr(chat_core, "search", lambda q, top_k=5: list(_ILGISIZ_HIT))
+    monkeypatch.setattr(rag_store, "search_arsiv", lambda q, top_k=5: [])
+    monkeypatch.setattr(chat_core, "search_tdk_exact_lemma", lambda lemma, top_k=5: [])
+    monkeypatch.setattr(chat_core, "search_tarih_hafiza", lambda q, top_k=5, scan_cap=96: [])
+
+
 def _hazirla(mesaj: str):
     return chat_core.prepare_turn(
         mesaj, [], False, 0.0, False, False, mode="genel", orchestration_out={}
     )
 
 
-def test_prepare_turn_ilgisiz_bulgu_ham_dokulmez_zincir_surer():
+def test_prepare_turn_ilgisiz_bulgu_ham_dokulmez_zincir_surer(_hermetik_arama):
     _msg, _hits, payload, _system, _model, direct = _hazirla("Elektroliz nedir?")
     assert not direct  # ham döküm / sabit cevap yok → LLM zinciri çalışacak
     assert "Güneş Sistemi" not in payload
@@ -157,7 +179,7 @@ def test_prepare_turn_ilgisiz_bulgu_ham_dokulmez_zincir_surer():
     assert "KANITSIZ SENTEZ" in payload
 
 
-def test_prepare_turn_bayrakla_eski_ham_dokum_gelir(monkeypatch):
+def test_prepare_turn_bayrakla_eski_ham_dokum_gelir(monkeypatch, _hermetik_arama):
     monkeypatch.setenv(BAYRAK, "1")
     o: dict = {}
     r = chat_core.prepare_turn(

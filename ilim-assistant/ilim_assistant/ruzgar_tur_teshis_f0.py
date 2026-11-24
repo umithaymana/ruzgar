@@ -76,6 +76,21 @@ def get_last_shamela_cats() -> list[str]:
         return list(_last_shamela_cats)
 
 
+_last_k3: dict[str, Any] | None = None
+
+
+def note_k3(info: dict[str, Any] | None) -> None:
+    """K3 sorgu-genişletme özeti (kavramlar, Arapça sorgular, lexik isabet). None = sıfırla."""
+    global _last_k3
+    with _lock:
+        _last_k3 = dict(info) if isinstance(info, dict) else None
+
+
+def get_last_k3() -> dict[str, Any] | None:
+    with _lock:
+        return dict(_last_k3) if _last_k3 else None
+
+
 def mark_warmup(part: str, ok: bool = True) -> None:
     key = (part or "").strip().lower()
     if key not in ("rag", "ollama", "whisper_tts", "boot_bg_done"):
@@ -355,6 +370,8 @@ def build_tur_kart(
         "sayi_hard_gate": bool(o.get("sayi_hard_gate")),
         "warmup": warmup_snapshot().get("state"),
         "ilim_no_cloud_invent": bool(o.get("ilim_no_cloud_invent")),
+        "kaynak_kunye": list(o.get("kaynak_kunye") or [])[:8],
+        "k3": o.get("k3") if isinstance(o.get("k3"), dict) else None,
     }
     return card
 
@@ -436,6 +453,16 @@ def note_rag_retrieval(
     cats = get_last_shamela_cats()
     if cats:
         orchestration_out["shamela_cats"] = cats
+    _k3i = get_last_k3()
+    if _k3i:
+        orchestration_out["k3"] = _k3i
+    # D1: kanıt paketi künyeleri (ölçüm/uydurma kaynak denetimi). Davranışı değiştirmez.
+    try:
+        from ilim_assistant.ruzgar_kunye import kunyeler_for_hits
+
+        orchestration_out["kaynak_kunye"] = kunyeler_for_hits(hl, limit=8)
+    except Exception:
+        pass
     if usable is not None:
         orchestration_out["kutuphane_usable"] = bool(usable)
     if miss_class and miss_class in _MISS_CLASSES:

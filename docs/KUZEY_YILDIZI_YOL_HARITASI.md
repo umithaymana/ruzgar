@@ -1,7 +1,7 @@
 # RÜZGAR — Kuzey Yıldızı Yol Haritası (kart panosu)
 
 **Kayıt:** 2026-11-23 · Mimar `kaydet` · Kaynak: İkinci Denetim Raporu (düzeltilmiş vizyon)
-**Başlangıç skoru:** 41/100 · **Hedef:** 365 günde 85+ · **Durum:** P0 başladı — **K0 🟢 · K1 🟢** (2/23 yeşil, 2026-11-24) · sıradaki: **K2**
+**Başlangıç skoru:** 41/100 · **Hedef:** 365 günde 85+ · **Durum:** P0 — **K0 🟢 · K1 🟢 · D1 🟢** (3/23 yeşil, 2026-11-24) · K3 🟡 (TR→AR dilim) · sıradaki: **K3 devam** / **K2**
 
 ---
 
@@ -31,11 +31,11 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 
 | Dalga | Kartlar | Yeşil | Hedef süre |
 |-------|---------|-------|-----------|
-| P0 — Doğallık ve güvenlik | 7 (D1 eklendi) | **2/7** (K0 🟢 · K1 🟢) | ilk 2 hafta |
-| P1 — Temel | 9 (D2 eklendi) | 0/9 | 2–8 hafta |
+| P0 — Doğallık ve güvenlik | 7 (D1 eklendi) | **3/7** (K0 🟢 · K1 🟢 · D1 🟢) | ilk 2 hafta |
+| P1 — Temel | 9 (D2 eklendi) | 0/9 · K3 🟡 | 2–8 hafta |
 | P2 — Derinlik | 5 | 0/5 | 2–4 ay |
 | P3 — Temizlik | 2 | 0/2 | sürekli |
-| **Toplam** | **23** | **2/23** | |
+| **Toplam** | **23** | **3/23** | |
 
 ---
 
@@ -85,8 +85,11 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 
 ## 4) P1 — 2–8 hafta
 
-### K3 — Hibrit arama + reranker + sorgu yeniden yazma · ⬜ Bekliyor (KN-3, KN-7)
-- **Yapılacak:** BM25 + çok dilli güçlü embedding (bge-m3 sınıfı) + yerel reranker; TR/AR/EN sorgu çeşitleme + terim sözlüğü. Önce altın sette A/B, sonra geçiş.
+### K3 — Hibrit arama + reranker + sorgu yeniden yazma · 🟡 Yapılıyor (KN-3, KN-7 · 2026-11-24 dilim)
+- **Yapılan (ilk dilim, yeniden indeks / model indirme YOK):** TR→AR terim sözlüğü `ilim-assistant/data/terim_sozlugu/din.json` · `ruzgar_k3_sorgu.py` · Şâmile'de Arapça sorgu + kelime tabanlı yeniden sıralama (`shamela_rag_shards.py`) · kapat `RUZGAR_K3_DIN_SORGU=0`.
+- **Yardımcı onarım (aynı tur):** ana `.rag_index/embeddings.npy` eksikti → `scripts/rag_ana_emb_onar.py` ile mevcut `chunks.jsonl`'den yeniden gömüldü · eski «bulamadım» sohbet kaydı hafızayı kilitlemesin (`ruzgar_tek_beyin.py`) · din soruları TDK tam-madde yoluna sapmasın (`chat_core._tdk_exact_path_allowed`) · altın set koşusu her soruda ayrı `device_id`.
+- **Kanıt (din rafı 130, web kapalı):** `din_baslangic` doğru **%36,2** → `din_k3_tdkfix` **%57,7** (+21,5 puan) · kapsama 0,392 → 0,573 · ham döküm 7 → **0** · rapor `docs/DIN_RAPOR_DIN_K3_TDKFIX_2026-11-24.md`. Fıkıh hâlâ zayıf (%33 doğru / %67 bulamadım); künye/kaynak gösterme %0 (D2).
+- **Kalan (yeşil için):** BM25 hibrit · bge-m3 sınıfı embedding + yeniden indeks (Mimar indirme/VRAM onayı) · yerel reranker · recall@5 ≥ +25 · gerileme yok.
 - **Bağımlılık:** K0, K1
 - **Yeşil ölçütü:** recall@5 başlangıca göre anlamlı artış (hedef ≥ +25 puan); gerileyen alan yok.
 
@@ -188,8 +191,9 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 - **Önemli teknik not (kök neden):** Şâmile eserleri **Arapça**, sorular **Türkçe**. Mevcut arama modeli (MiniLM) Türkçe→Arapça eşleştirmede zayıf; baseline'daki «abdesti bozan şeyler → bulamadım» sonucunun asıl nedeni bu. Bu yüzden **K3 (çok dilli arama + TR→AR sorgu çevirisi + terim sözlüğü) din için kritik**: K3 önceliği din rafı açısından yükseltilmiştir (K1'den hemen sonra). Cevap Türkçe verilir; Arapça kaynak metin gerekirse tercüme motoruyla açıklanır, **kaynak künyesi Arapça orijinale işaret eder**.
 - **Şâmile envanteri (D1'in ilk işi):** hangi eserler var, hangi katmanı kapsıyor, hangileri indekste, hangileri eksik → `docs/DIN_KAPSAM_ENVANTERI_*.md`. Eksikler Mimar'a **liste** olarak sunulur; kaynak ekleme/lisans kararı Mimar'dadır.
 
-### D1 — Din altın seti: Ehl-i Sünnet itikadı + tasavvuf + kaynak verme ölçümü · ⬜ Bekliyor (P0-ek)
-- **Yapılacak:** Din rafı 20 → en az 80 soruya çıkar: Ehl-i Sünnet itikadı (Eş'arî/Mâtürîdî esasları, sıfatlar, kader, ru'yetullah, âhiret, şefaat, ehl-i kıble), tasavvuf (tövbe, zühd, muhabbet, sülûk, tarikat edebi, ihsan, Mevlânâ/Gazâlî/Abdülkadir Geylânî/İbn Arabî'ye dair temel sorular), fıkıh, hadis, tefsir. Yeni ölçütler: (a) **kaynak verme oranı** («kaynak göster» denince eser+bölüm gelsin), (b) **çoklu eser sentezi** (≥2 farklı eserden), (c) **uydurma kaynak sayısı** (hedef 0), (d) **sadelik** (Mimar-vekil puanı). Bid'at/şaz görüş sorularında Ehl-i Sünnet çizgisinin korunduğunu denetleyen sorular.
+### D1 — Din altın seti: Ehl-i Sünnet itikadı + tasavvuf + kaynak verme ölçümü · 🟢 Yeşil (2026-11-24)
+- **Yeşil gerekçesi:** koşucu `din-rapor` / `din-sade` canlı · din rafı **130 soru** (temel/akaid/fıkıh/hadis/tefsir/tasavvuf/siyer/kissa/tarih + «kaynak göster» varyantları) · başlangıç çizgisi `docs/DIN_RAPOR_DIN_BASLANGIC_2026-11-24.md` · uydurma kaynak denetleyicisi `scripts/din_olcut.py` · Şâmile envanteri `docs/DIN_KAPSAM_ENVANTERI_2026-11-24.md` · ikinci çizgi `docs/DIN_RAPOR_DIN_K3_TDKFIX_2026-11-24.md` (doğru %57,7).
+- **Ölçüm notu (D2'ye aktarılır):** kaynak künye %0 · çoklu eser %0 · uydurma şüphe hâlâ var (19 soru) · fıkıh/kıssa zayıf. D1 ölçüm kartıdır; kalite yükseltme D2 + K3 kalanıdır.
 - **Bağımlılık:** K0
 - **Yeşil ölçütü:** Koşucu din rafını ayrı raporlar; başlangıç çizgisi kaydedilmiş; uydurma kaynak denetleyicisi çalışıyor.
 
@@ -222,3 +226,5 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 | 2026-11-23 | K0 | 🟡 Kanıt hazır: 240 soruluk set + koşucu + başlangıç çizgisi (geçti %35,4; ham döküm %43, bunların %5'i doğru). Mimar `yeşil` bekliyor. |
 | 2026-11-24 | K0 | 🟢 Yeşil: koşucu tek komut + başlangıç çizgisi dosyada + doğallık ajan puanı 2,29/5 (Mimar devriyle; n=24). |
 | 2026-11-24 | K1 | 🟢 Yeşil: 240 soruda doğru %35,4 → %77,9 · ham döküm 104 → 0 · bulamadım %6,7 → %4,2 · doğallık 2,29 → 3,50 · hiçbir rafta gerileme yok. Geri alma `RUZGAR_KUTUPHANE_HAM_DOKUM=1`. Sayaç 2/23. Sıradaki: K2. |
+| 2026-11-24 | D1 | 🟢 Yeşil: din 130 soru + `din-rapor` + başlangıç çizgisi + uydurma denetleyici + Şâmile envanteri. Sayaç 3/23. |
+| 2026-11-24 | K3 | 🟡 İlk dilim: TR→AR sözlük + Şâmile Arapça sorgu; din doğru %36,2 → %57,7 (`din_k3_tdkfix`). Kalan: BM25 / bge-m3 / reranker (indirme onayı). Yan onarım: `embeddings.npy` yeniden gömüldü; miss-hafıza kilidi; TDK-din sapması. |

@@ -1,8 +1,18 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-23 sabah — Elektrik kesintisi sonrası tam denetim: **Madde 1 + 2 + 3 kod/test YEŞİL** (pytest **387 geçti · 0 hata**; node testleri yeşil) · açık kalanlar: **masaüstü sade ses yüzü** (arayüz kilidi) · **istemcide parça parça (MSE) ses çalma** · mobil girişli uçtan uca kulak turu (bkz. «DENETİM 2026-11-23»).
+**Son güncelleme:** 2026-11-24 öğle — Din/K3 ara (Mimar «yaz / ara ver»). **K0 🟢 · K1 🟢 · D1 🟢** (3/23) · **K3 🟡** TR→AR dilim · din doğru **%36,2 → %57,7** · pytest **470** yeşil · **commit yok** (açık değişiklikler var).
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+---
+
+## KALDIĞIMIZ YER — 2026-11-24 (Mimar ara verdi; dönüşte buradan)
+
+1. **Ölçüm bitti:** `din_k3_tdkfix` (130 soru) · doğru **%57,7** · bulamadım %31,5 · ham **0** · rapor `docs/DIN_RAPOR_DIN_K3_TDKFIX_2026-11-24.md` (+ başlangıç `DIN_RAPOR_DIN_BASLANGIC_*`).
+2. **Kod (commit edilmedi):** K3 sorgu (`ruzgar_k3_sorgu.py`, `data/terim_sozlugu/din.json`, `shamela_rag_shards.py`, `rag_store.py`) · miss-hafıza kilidi (`ruzgar_tek_beyin.py`) · TDK-din sapması kapalı (`chat_core.py`) · altın set ayrı `device_id` (`scripts/altin_set_kos.py`) · `scripts/rag_ana_emb_onar.py` · testler `test_tek_beyin_miss_hafiza_degil` / `test_tdk_exact_din_degil` / K1 hermetik arama.
+3. **Disk onarım:** `.rag_index/embeddings.npy` yeniden gömüldü (389k+ parça; `chunks.jsonl` ile hizalı). Yedek: `.ruzgar/ana_motor_chat_history.jsonl.bak_20261124` · altın-set scope temizlendi.
+4. **Sıradaki (dönünce):** (a) commit isteği → `yap/commit` · (b) K3 kalan: BM25 / bge-m3 indirme onayı / reranker · (c) D2: künye + «kaynak göster» (%0 → hedef) · (d) fıkıh/kıssa zayıf sorular. K2 hâlâ açık ama Mimar din önceliği verdi.
+5. **Dal:** `cursor/sohbet-akicilik-a-f` · son commit `718ceb5d3` (K0+K1) · yerel 1 commit önde + çok uncommitted.
 
 ---
 
@@ -10,7 +20,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 | Öncelik | Konu | Not |
 |---------|------|-----|
-| **YENİ ANA PLAN — kart panosu (2026-11-23 · Mimar `kaydet`)** | **Kuzey Yıldızı Yol Haritası: orkestra + sahne + evrensel kütüphane + web + yerel öncelik + programlama omurgası** | `docs/KUZEY_YILDIZI_YOL_HARITASI.md` · 23 kart · şu an **2/23 yeşil (2026-11-24)**: **K0 🟢** altın soru seti (240 soru · `ilim-assistant/scripts/altin_set_kos.py`; başlangıç doğru %35,4) · **K1 🟢** ham döküm kapalı, hep sentez (doğru %35,4 → **%77,9** · ham döküm 104 → **0** · bulamadım %6,7 → %4,2 · doğallık ajan puanı 2,29 → 3,50 · pytest 450 yeşil · geri alma `RUZGAR_KUTUPHANE_HAM_DOKUM=1`; rapor `docs/K1_KARSILASTIRMA_2026-11-24.md`). Sıradaki: **K2** (üslup niyete bağlı; din için âlim edası). Kart yalnız kanıtla yeşile döner. Bulgular: hazır kart/kestirme isabetsizliği (O1), Gemini cevap kesilmesi ~%20, din rafı %40 (K3/D1) |
+| **YENİ ANA PLAN — kart panosu (2026-11-23 · Mimar `kaydet`)** | **Kuzey Yıldızı Yol Haritası** | `docs/KUZEY_YILDIZI_YOL_HARITASI.md` · **3/23 yeşil (2026-11-24)**: **K0 🟢** · **K1 🟢** · **D1 🟢** (din 130 soru + `din-rapor` + envanter) · **K3 🟡** TR→AR dilim (din %36,2 → **%57,7**; ham 0; kalan BM25/bge-m3/reranker — indirme onayı) · rapor `docs/DIN_RAPOR_DIN_K3_TDKFIX_2026-11-24.md`. Sıradaki: K3 devam veya K2. Bulgular: fıkıh %33 · künye %0 (D2) · Gemini kesik cevap ~%20 · hazır kart (O1) |
 | **1 — Masa gerçek iş** | **M1–M3 MÜHÜR YEŞİL** | `docs/M3_MASA_ANA_MOTOR_MUHUR_2026-11-21.md` · `smoke_masa_m3_muhur.py` |
 | **2 — Çırak / programlama** | **A–G+T✓** tavan mühür | `TAVAN_DERS.md` · `smoke_cirak_dilim_t.py` |
 | **1 — Kod tamam, Mimar gözü bekliyor** | **Sade sohbet yüzü (MASAÜSTÜ) — mobille aynı «rüzgar çizgisi» (2026-11-23, Mimar izni)** | `ruzgar-desktop/ruzgar-yuz.js` + `.css` (+ `index.html`'e 2 satır). **Yalnız sohbet paneli içi**: balonsuz cevap, kapsül kullanıcı, alt çubuk (+ · yazı · durdur · duraklat/devam · mikrofon⇄gönder), çizgi durumu **Rüzgar sahnesinin `data-sahne-mode` değerinden** okunur (sahne ile çizgi ayrışmaz), 6 renk (masaüstü varsayılanı Altın), cevaba tıklayınca Kopyala/Oku/Yeniden dene. «+» menüsü: Belge/Tablo/Çizim/Sunum hazır cümleleri, mevcut seçenek kutuları (Web ara, Sesli yanıt, Konuşunca gönder, Bağlantı oku, Kod modu, Otonom, Sayfa oku) **taşınır** (aynı DOM, durumları korunur), Sohbette ara/temizle/dışa aktar, Ses seç. **AÇIK gelir**; «+» → «Eski sohbete dön» ya da `?yuz=0` kapatır (`?yuz=1` açar). Motor listesi, geri/ileri/yenile, tutamaç, dört masa ve sahne **dokunulmadı** (`tests/test_masaustu_yuz_statik.py` bunu denetler). Not: app.js'teki duraklat/devam SVG simgesi `hidden` özelliğiyle değiştiği için ekranda değişmiyordu; yüz bunu çubukta düzeltir |

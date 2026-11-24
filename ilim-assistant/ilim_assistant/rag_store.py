@@ -1214,7 +1214,21 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
                 from ilim_assistant.shamela_rag_shards import load_registry as _sam_reg
 
                 _ready = dict((_sam_reg().get("ready") or {}))
-                _cats = pick_shamela_cats_for_query(query, _ready)
+                # K3: soru dilinden kaynak diline (Arapça) terim/sorgu genişletme (veri sözlüğü; kapat RUZGAR_K3_DIN_SORGU=0)
+                _k3 = None
+                try:
+                    from ilim_assistant.ruzgar_k3_sorgu import plan_for_query as _k3_plan
+                    from ilim_assistant.ruzgar_tur_teshis_f0 import note_k3 as _note_k3
+
+                    _note_k3(None)
+                    _k3 = _k3_plan(query)
+                    if _k3 is not None and not _k3.aktif:
+                        _k3 = None
+                except Exception:
+                    _k3 = None
+                _cats = pick_shamela_cats_for_query(
+                    query, _ready, prefer=(_k3.kategoriler if _k3 is not None else None)
+                )
                 try:
                     from ilim_assistant.ruzgar_tur_teshis_f0 import note_shamela_cats
 
@@ -1227,6 +1241,7 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
                         top_k=max(int(top_k), 8),
                         q_vec=q,
                         cats=_cats,
+                        k3=_k3,
                     )
                 )
                 for text, source, score in _sham1:
@@ -1256,7 +1271,8 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
                     and _cats is not None
                 ):
                     _deep_cats = pick_shamela_cats_for_query(
-                        query, _ready, deep=True, exclude=_cats
+                        query, _ready, deep=True, exclude=_cats,
+                        prefer=(_k3.kategoriler if _k3 is not None else None),
                     )
                     if _deep_cats:
                         try:
@@ -1272,6 +1288,7 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
                             cats=_deep_cats,
                             deep=True,
                             exclude_cats=_cats,
+                            k3=_k3,
                         ):
                             _put(text, source, float(score))
         except Exception:

@@ -15,7 +15,19 @@ def _chunk_max_chars() -> int:
 
 
 def _enrich_src_label(src: str) -> str:
-    """Ortak kayıt varsa bibliyografik etiket; yoksa path. Hata yutulur."""
+    """Eser künyesi (manifest) → ortak kayıt bibliyografisi → path. Hata yutulur.
+
+    K3: kaynak klasöründe manifest.json varsa etiket «Arapça eser adı — müellif (Türkçe ad) [kimlik · kategori]» olur;
+    kanıt orijinal eserde kalır, künye Arapça orijinale işaret eder. Kapat: RUZGAR_KUNYE=0.
+    """
+    try:
+        from ilim_assistant.ruzgar_kunye import kunye_etiketi
+
+        _k = kunye_etiketi(src)
+        if _k:
+            return _k
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_ortak_kaynak import enrich_source_label, ortak_kaynak_enabled
 

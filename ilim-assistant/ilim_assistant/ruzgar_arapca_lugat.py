@@ -292,6 +292,16 @@ def looks_like_arapca_lugat_question(msg: str) -> bool:
         x in low for x in ("nedir", "ne demek", "anlam", "kok", "kök", "mana")
     ):
         return True
+    # K3: din kavram sözlüğünde özgül kavram (abdest/namaz/zekât/iman esasları…) varsa ve açık lügat/kök ipucu
+    # yoksa bu bir bilgi sorusudur → kök kartı değil kaynaklı cevap yolu. Kapat: RUZGAR_K3_DIN_SORGU=0.
+    try:
+        from ilim_assistant.ruzgar_k3_sorgu import plan_for_query as _k3_plan
+
+        _p = _k3_plan(msg)
+        if _p is not None and _p.aktif:
+            return False
+    except Exception:
+        pass
     # Latin kök: kısa bakış («islam nedir»). Uzun sohbet cümlesi lügate düşmez.
     root_hits = [
         tok
