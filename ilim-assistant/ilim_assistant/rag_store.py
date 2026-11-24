@@ -502,8 +502,8 @@ def build_index(
                 emb_out = keep_emb
 
             chunks_out = kept_chunks + new_chunks
-            _atomic_save_npy(emb_path, emb_out)
             _atomic_write_chunks_jsonl(chunks_path, chunks_out)
+            _atomic_save_npy(emb_path, emb_out)
             _atomic_write_text(
                 manifest_path,
                 json.dumps(
@@ -670,8 +670,10 @@ def upsert_sources_into_main_index(
     chunks_out = kept_chunks + new_chunks
     digest = _overall_digest(file_digests)
 
-    _atomic_save_npy(emb_path, emb_out)
+    # Önce parçalar, sonra gömme. Gömme önce yazılırsa ve parça değişimi kilitte kalırsa
+    # arama «uyumsuz» deyip boş döner (din sorusu «bulamadım»).
     _atomic_write_chunks_jsonl(chunks_path, chunks_out)
+    _atomic_save_npy(emb_path, emb_out)
     _atomic_write_text(
         manifest_path,
         json.dumps(
@@ -1198,6 +1200,8 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
         _put(chunks[ii].text, chunks[ii].source, float(sim[ii]))
 
     # Şamile kategori shard'ları (ana indeksi şişirmeden). Ortak/fen hijyeninde eklenmez.
+    _k3 = None
+    _sham1: list = []
     if os.environ.get("RUZGAR_SHAMELA_SHARDS", "1").strip().lower() not in (
         "0",
         "false",
@@ -1215,7 +1219,6 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
 
                 _ready = dict((_sam_reg().get("ready") or {}))
                 # K3: soru dilinden kaynak diline (Arapça) terim/sorgu genişletme (veri sözlüğü; kapat RUZGAR_K3_DIN_SORGU=0)
-                _k3 = None
                 try:
                     from ilim_assistant.ruzgar_k3_sorgu import plan_for_query as _k3_plan
                     from ilim_assistant.ruzgar_tur_teshis_f0 import note_k3 as _note_k3
@@ -1547,16 +1550,35 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
                         return _merge_domain_first(dom_f, glob_f)
                 if prefixes and _din_hygiene_enabled():
                     filtered = [h for h in filtered if not source_is_din(h[1])] or filtered
-                return filtered[:tk]
+                if _sham1 and not any(
+                    "shamela" in (h[1] or "").replace("\\", "/").lower() for h in filtered
+                ):
+                    from ilim_assistant.ruzgar_kunye import cesitlendir_eser
+
+                    return cesitlendir_eser(_sham1, limit=max(tk, 4))[:tk]
+                return _eser_cesitli(filtered, tk)
             if domain_preferred:
                 return domain_preferred[:tk]
             if not soft:
+                # Arapça Şâmile, Türkçe süzgece takılır. Aday varsa eser çeşitliliğiyle geri ver.
+                _koru = [h for h in (_sham1 or raw) if "shamela" in (h[1] or "").replace("\\", "/").lower()]
+                if _koru:
+                    return _eser_cesitli(_koru, tk)
                 return []
     except Exception:
         pass
     if domain_preferred:
-        return domain_preferred[:tk]
-    return raw[:tk]
+        return _eser_cesitli(domain_preferred, tk)
+    return _eser_cesitli(raw, tk)
+
+
+def _eser_cesitli(hits: list, tk: int) -> list:
+    """Şâmile ağırlıklı listede aynı kitabı tekrarlama."""
+    if sum(1 for h in hits if "shamela" in (h[1] or "").replace("\\", "/").lower()) < 2:
+        return hits[:tk]
+    from ilim_assistant.ruzgar_kunye import cesitlendir_eser
+
+    return cesitlendir_eser(hits, limit=max(tk, 4))[:tk]
 
 
 def _arsiv_root() -> Path | None:

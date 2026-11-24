@@ -146,6 +146,52 @@ def kunyeler_for_hits(hits: Iterable[Any], *, limit: int = 8) -> list[dict[str, 
     return out
 
 
+def cesitlendir_eser(hits: Sequence[Any], limit: int = 4) -> list[Any]:
+    """Aynı kitabın art arda parçaları yerine en çok `limit` farklı eser (şâmile kimliği)."""
+    import re
+
+    best: dict[str, Any] = {}
+    order: list[str] = []
+    for h in hits or []:
+        try:
+            src = str(h[1] or "")
+            sc = float(h[2])
+        except Exception:
+            continue
+        m = re.search(r"shamela_(\d+)", src.replace("\\", "/"))
+        key = m.group(1) if m else src
+        prev = best.get(key)
+        if prev is None:
+            order.append(key)
+            best[key] = h
+        else:
+            try:
+                if sc > float(prev[2]):
+                    best[key] = h
+            except Exception:
+                pass
+    return [best[k] for k in order][: max(1, limit)]
+
+
+def kaynak_izi_metni(kunyeler: Sequence[dict[str, Any]] | None, *, limit: int = 4) -> str:
+    """Cevap sonuna eklenecek künye. Kanıt künyesi yoksa boş."""
+    lines: list[str] = []
+    for k in kunyeler or []:
+        ad = str(k.get("eser_ar") or k.get("eser_tr") or k.get("yol_adi") or "").strip()
+        if not ad:
+            continue
+        yazar = str(k.get("yazar_ar") or k.get("yazar") or "").strip()
+        satir = f"[K{len(lines) + 1}] {ad}"
+        if yazar:
+            satir += f" — {yazar}"
+        lines.append(satir)
+        if len(lines) >= limit:
+            break
+    if not lines:
+        return ""
+    return "\n\nKaynak izi:\n" + "\n".join(lines)
+
+
 def label_for_source(src: str) -> str:
     """Bağlam bloğu etiketi: künye varsa künye, yoksa yol."""
     et = kunye_etiketi(src)

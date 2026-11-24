@@ -1,6 +1,27 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-24 öğle — Din/K3 ara (Mimar «yaz / ara ver»). **K0 🟢 · K1 🟢 · D1 🟢** (3/23) · **K3 🟡** TR→AR dilim · din doğru **%36,2 → %57,7** · pytest **470** yeşil · **commit yok** (açık değişiklikler var).
+**Son güncelleme:** 2026-11-24 gece — Mimar yönetici izni + 05:30 bge-m3 gece işi kuruldu.
+
+## YÖNETİCİ İZNİ — 2026-11-24 gece (Mimar, «özellikle not al»)
+
+Plan işlerken **tüm yönetici izinleri açık**. İndirme ve kurulum serbest. Mimar bilgisayarın başında olmayabilir; plan aksamasın diye ajan gereken dosyayı indirip kurabilir. Bu izin bir kerelik 05:30 işine sıkışmaz, sonraki plan adımlarını da kapsar. Canlı MiniLM indeksini silmek bu iznin parçası değildir: yeni model yan klasöre yazılır, geçiş ayrı bakılır.
+
+## DURUM EMRİ — pano bitene kadar (Mimar, 2026-11-24 21:44)
+
+Kuzey Yıldızı panosundaki **tüm kartlar** (bugün 23; Mimar «21-21» dedi, eklenen D1/D2 dahil hepsi) yeşil olana kadar:
+
+- Ajan sıradaki işe soru sormadan devam eder.
+- İş dilimi oturunca **commit ve push** kendisi yapar. Bu da iznin içindedir.
+- Yönetici, indirme ve kurulum aynı kapsamdadır.
+- Canlı MiniLM indeksini silmek ve aramayı yeni modele habersiz geçirmek bu emrin parçası değildir.
+
+## GECE İŞİ — 25.11.2026 05:30 (Türkiye)
+
+- Görev: `Ruzgar-BGE-M3-Gece` (Görev Zamanlayıcı, bir kez).
+- Betik: `ilim-assistant/scripts/bge_m3_gece.ps1` → `bge_m3_gece.py`.
+- Yapar: `BAAI/bge-m3` indirir, 40 Şâmile shard'ını **yan** indekse gömer (`.rag_index/shards/shamela_bge_m3/`). Canlı `shards/shamela` ve ana `embeddings.npy` **değişmez**. Arama kendiliğinden bu modele geçmez.
+- Günlük: `.rag_index/shards/shamela_bge_m3/gece.log`. Kaldığı satırdan sürer.
+- Süre: 8,2 milyon parça, 8 GB kartta birkaç saati aşabilir; görev 18 saate kadar açık kalır. Uyku zaten kapalı (AC/DC bekleme 0). Oturum açık kalmalı.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 

@@ -228,3 +228,4 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 | 2026-11-24 | K1 | 🟢 Yeşil: 240 soruda doğru %35,4 → %77,9 · ham döküm 104 → 0 · bulamadım %6,7 → %4,2 · doğallık 2,29 → 3,50 · hiçbir rafta gerileme yok. Geri alma `RUZGAR_KUTUPHANE_HAM_DOKUM=1`. Sayaç 2/23. Sıradaki: K2. |
 | 2026-11-24 | D1 | 🟢 Yeşil: din 130 soru + `din-rapor` + başlangıç çizgisi + uydurma denetleyici + Şâmile envanteri. Sayaç 3/23. |
 | 2026-11-24 | K3 | 🟡 İlk dilim: TR→AR sözlük + Şâmile Arapça sorgu; din doğru %36,2 → %57,7 (`din_k3_tdkfix`). Kalan: BM25 / bge-m3 / reranker (indirme onayı). Yan onarım: `embeddings.npy` yeniden gömüldü; miss-hafıza kilidi; TDK-din sapması. |
+| 2026-11-24 | K3 | Mimar yönetici izni + «05:30 indir». Görev `Ruzgar-BGE-M3-Gece` 25.11.2026 05:30: bge-m3 iner, gömme yan klasöre (`shamela_bge_m3`). Canlı MiniLM silinmez, arama kendiliğinden geçmez. |

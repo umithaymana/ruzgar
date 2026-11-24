@@ -13188,6 +13188,17 @@ def _finalize_done_chat_turn(req: ChatRequest, done: dict[str, Any]) -> dict[str
     except Exception:
         pass
     try:
+        orch = obj.get("orchestra") if isinstance(obj.get("orchestra"), dict) else {}
+        reply = str(obj.get("full_reply") or "")
+        if reply and "kaynak izi" not in reply.lower():
+            from ilim_assistant.ruzgar_kunye import kaynak_izi_metni
+
+            iz = kaynak_izi_metni(orch.get("kaynak_kunye") if isinstance(orch, dict) else None)
+            if iz:
+                obj["full_reply"] = reply.rstrip() + iz
+    except Exception:
+        pass
+    try:
         obj = _persist_done_chat_turn(req, obj)
     except Exception:
         pass

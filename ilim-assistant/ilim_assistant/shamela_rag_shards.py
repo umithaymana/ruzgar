@@ -968,8 +968,11 @@ def search_shamela_shards(
         # K3: kelime tabanlı (birebir öbek) adaylar — yoğun aramanın kaçırdığı terim isabetleri
         if _k3_on and q_mat is not None and getattr(k3, "kelime_terimleri", None):
             try:
+                # Öbek taraması tüm bütçeyi yutmasın (büyük fıkıh shard'ında 100 sn+ oluyordu,
+                # sohbet bütçesi dolunca kapı tüm adayları siliyordu).
+                _phrase_deadline = min(t0 + budget, time.monotonic() + 1.2)
                 _rows = _k3_phrase_rows(
-                    ch_p, offsets, list(k3.kelime_terimleri), deadline=t0 + budget  # type: ignore[union-attr]
+                    ch_p, offsets, list(k3.kelime_terimleri), deadline=_phrase_deadline  # type: ignore[union-attr]
                 )
                 if _rows.size:
                     _kw_sc = (emb[_rows] @ q_mat).max(axis=1)
@@ -1018,7 +1021,10 @@ def search_shamela_shards(
             if _with:
                 _scored = _with + [x for x in _scored if x[3] == 0 and x[2] >= _gate_min]
             else:
-                _scored = [x for x in _scored if x[2] >= _gate_min]
+                # Kelime isabeti yok (tarama kısa kesildi ya da terim seyrek): yoğun adayın en iyisini tut.
+                # Eşik altını tamamen silmek sohbette «bulamadım» üretiyordu.
+                _keep = [x for x in _scored if x[2] >= _gate_min]
+                _scored = _keep or _scored[:tk]
             _scored.sort(key=lambda x: (x[3], x[2]), reverse=True)
             try:
                 from ilim_assistant.ruzgar_tur_teshis_f0 import note_k3
