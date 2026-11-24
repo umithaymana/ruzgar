@@ -68,7 +68,9 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 - **Bağımlılık:** K0
 - **Yeşil ölçütü:** Fizik/gündelik sorularda vaaz tonu yok (Mimar gözü + altın set); Kur'an/hadis/tefsirde vakur ton korunur (mevcut mühür testleri yeşil).
 
-### O1 — Tek Niyet Kararı · ⬜ Bekliyor (OR-1, KN-5)
+### O1 — Tek Niyet Kararı · 🟡 Yapılıyor (OR-1, KN-5 · 2026-11-24)
+- **Yapılan:** `ruzgar_o1_karar.py` — turda bir `Karar` (niyet, hedef motor, canlı, kütüphane, üslup, bütçe, güven); `prepare_turn` kayda yazar. Kapat `RUZGAR_O1_KARAR=0`. Aynı soru aynı kaydı üretir (`test_o1_karar`).
+- **Kalan (yeşil için):** kestirmeler bu kayda bağlanır; envanter; altın sette gerileme yok. Boot sırası değişmez.
 - **Yapılacak:** Her turda bir kez üretilen tek `Karar` kaydı: niyet · hedef motor · canlı bilgi ihtiyacı · kütüphane uygunluğu · üslup · zaman bütçesi · güven. Kestirmeler bu karara tabi olur. 6 yönlendirici ve 168 kestirme için envanter + kullanım ölçümü; ölü olanlar P3'te emekliye.
 - **Bağımlılık:** K0
 - **Yeşil ölçütü:** `prepare_turn` kararı tek yerden alır; aynı soru her koşuda aynı yolu izler (tekrarlanabilirlik testi); altın sette gerileme yok. Boot sırası değişmez.
@@ -237,3 +239,5 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 | 2026-11-24 | K3 | 🟡 BM25 hibrit (aday Okapi, indirme yok). Kapat `RUZGAR_K3_BM25=0`. Din 130 yeniden ölçüm sırada. |
 | 2026-11-24 | K3+D2 | Ölçüm `din_d2_bm25`: doğru %57,7→**%73,1** · bulamadım %31,5→**%3,8** · kaynak %0→**%66,7** · çoklu eser %0→**%59,2** · fıkıh %33→**%72**. Rapor `DIN_RAPOR_DIN_D2_BM25_2026-11-24.md`. Kalan: akaid/tefsir zayıf, uydurma şüphe 15, bge-m3 05:30. |
 | 2026-11-24 | K2 | 🟡 Üslup profilleri (`ruzgar_k2_uslup`); din→âlim. Lugat kaçışı + kaynak-göster anlık kart yasağı. |
+| 2026-11-24 | — | Mimar 23:55: pano bitene kadar durmadan devam, dilim bitince commit+push. Kural `.cursor/rules/ruzgar-pano-bitene-devam-FROZEN.mdc`. |
+| 2026-11-24 | O1 | 🟡 Tek `Karar` kaydı (`ruzgar_o1_karar`). Kestirmeler henüz bağlanmadı. |

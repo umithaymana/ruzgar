@@ -1267,6 +1267,17 @@ def prepare_turn(
             )
         if orchestration_out is not None and turn_plan is not None:
             orchestration_out.setdefault("plan", turn_plan.to_dict())
+        try:
+            from ilim_assistant.ruzgar_o1_karar import attach_karar
+
+            attach_karar(
+                orchestration_out,
+                msg,
+                mode_norm=m,
+                question_plan=turn_plan,
+            )
+        except Exception:
+            pass
     except Exception:
         turn_plan = question_plan
         append_plan_directive = None  # type: ignore[misc, assignment]

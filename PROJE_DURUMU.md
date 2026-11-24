@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-24 23:50 — «kitabında» coğrafya ipucunu açmıyor; Hicret Şâmile'ye döndü.
+**Son güncelleme:** 2026-11-24 23:55 — pano-devam kuralı kilitlendi; O1 Karar kaydı başladı.
 
 ## YÖNETİCİ İZNİ — 2026-11-24 gece (Mimar, «özellikle not al»)
 
