@@ -65,8 +65,6 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 - **Yapılan:** `ruzgar_k2_uslup.py` — profiller `sohbet` / `sade_ogretmen` / `akademik` / `alim`; din/K3 → `alim`; `prepare_turn` talimatı; kapat `RUZGAR_K2_USLUP=0`. Canlı: akaid sorusunda `uslup=alim`.
 - **Yan (aynı tur):** din bilgi sorusu Arapça lugat/Lane kartına düşmez; «kaynak göster» anlık kütüphane kartını atlar → RAG+künye.
 - **Kalan (yeşil için):** altın sette vaaz tonu yok (din dışı) + din vakur; mühür testleri; el/ajan doğallık.
-- **Yeşil ölçütü:** Fizik/gündelik sorularda vaaz tonu yok (Mimar gözü + altın set); Kur'an/hadis/tefsirde vakur ton korunur (mevcut mühür testleri yeşil).
-- **Yapılacak:** Üslup profilleri: sohbet / sade öğretmen (varsayılan) / akademik / âlim. "Vakur ve edebî" yalnız din/âlim niyetinde. Kaynak cümle içinde doğal anılır.
 - **Bağımlılık:** K0
 - **Yeşil ölçütü:** Fizik/gündelik sorularda vaaz tonu yok (Mimar gözü + altın set); Kur'an/hadis/tefsirde vakur ton korunur (mevcut mühür testleri yeşil).
 
