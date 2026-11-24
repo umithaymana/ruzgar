@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-24 23:26 — K2 üslup dilimi + din lugat/anlık kaçış kapandı.
+**Son güncelleme:** 2026-11-24 23:50 — «kitabında» coğrafya ipucunu açmıyor; Hicret Şâmile'ye döndü.
 
 ## YÖNETİCİ İZNİ — 2026-11-24 gece (Mimar, «özellikle not al»)
 

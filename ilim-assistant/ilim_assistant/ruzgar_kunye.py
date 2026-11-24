@@ -188,8 +188,9 @@ def kaynak_izi_metni(kunyeler: Sequence[dict[str, Any]] | None, *, limit: int = 
     """Cevap sonuna eklenecek künye. Kanıt künyesi yoksa boş."""
     lines: list[str] = []
     for k in kunyeler or []:
-        ad = str(k.get("eser_ar") or k.get("eser_tr") or k.get("yol_adi") or "").strip()
+        ad = str(k.get("eser_ar") or k.get("eser_tr") or "").strip()
         if not ad:
+            # Künyesiz yığın dosyası (coğrafya batch vb.) kaynak diye yazılmaz.
             continue
         yazar = str(k.get("yazar_ar") or k.get("yazar") or "").strip()
         satir = f"[K{len(lines) + 1}] {ad}"

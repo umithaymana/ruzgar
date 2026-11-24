@@ -1125,6 +1125,19 @@ def _fold_q(s: str) -> str:
     return t.lower()
 
 
+def _cue_in_query(cue: str, low: str) -> bool:
+    """İpucu sözcük sınırında eşleşir. «kıta» «kitabında»yı, «nefs» «nedir»i tutmaz."""
+    c = _fold_q(cue).strip()
+    if not c or not low:
+        return False
+    if " " in c:
+        return c in low
+    cleaned = low
+    for ch in "?!.,;:()[]\"'“”«»…":
+        cleaned = cleaned.replace(ch, " ")
+    return c in cleaned.split()
+
+
 def _ortak_path_prefixes_for_query(query: str) -> tuple[str, ...]:
     if os.environ.get("RUZGAR_RAG_ORTAK_BOOST", "1").strip().lower() in (
         "0",
@@ -1135,7 +1148,7 @@ def _ortak_path_prefixes_for_query(query: str) -> tuple[str, ...]:
     low = _fold_q(query)
     found: list[str] = []
     for cues, paths in _ORTAK_DOMAIN_HINTS:
-        if any(_fold_q(c) in low for c in cues):
+        if any(_cue_in_query(c, low) for c in cues):
             found.extend(paths)
     # benzersiz, sıra korunur
     out: list[str] = []
@@ -1550,12 +1563,17 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
                         return _merge_domain_first(dom_f, glob_f)
                 if prefixes and _din_hygiene_enabled():
                     filtered = [h for h in filtered if not source_is_din(h[1])] or filtered
-                if _sham1 and not any(
-                    "shamela" in (h[1] or "").replace("\\", "/").lower() for h in filtered
-                ):
-                    from ilim_assistant.ruzgar_kunye import cesitlendir_eser
+                _din_q = _k3 is not None
+                if not _din_q:
+                    try:
+                        from ilim_assistant.ruzgar_kutuphane_gorev import din_alani_sorusu
 
-                    return cesitlendir_eser(_sham1, limit=max(tk, 4))[:tk]
+                        _din_q = din_alani_sorusu(query)
+                    except Exception:
+                        _din_q = False
+                _sham_oncelik = _din_sham_oncelik(filtered, _sham1, tk, din=_din_q)
+                if _sham_oncelik is not None:
+                    return _sham_oncelik
                 return _eser_cesitli(filtered, tk)
             if domain_preferred:
                 return domain_preferred[:tk]
@@ -1570,6 +1588,24 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     if domain_preferred:
         return _eser_cesitli(domain_preferred, tk)
     return _eser_cesitli(raw, tk)
+
+
+def _is_shamela_src(src: str) -> bool:
+    return "shamela" in (src or "").replace("\\", "/").lower()
+
+
+def _din_sham_oncelik(filtered: list, sham: list, tk: int, *, din: bool) -> list | None:
+    """Din sorusunda Şâmile adayı varsa coğrafya/ortak parça onu ezmesin."""
+    if not din:
+        return None
+    pool = [h for h in list(sham or []) + list(filtered or []) if _is_shamela_src(h[1] if len(h) > 1 else "")]
+    if not pool:
+        if sham and not any(_is_shamela_src(h[1]) for h in filtered or []):
+            from ilim_assistant.ruzgar_kunye import cesitlendir_eser
+
+            return cesitlendir_eser(sham, limit=max(tk, 4))[:tk]
+        return None
+    return _eser_cesitli(pool, tk)
 
 
 def _eser_cesitli(hits: list, tk: int) -> list:

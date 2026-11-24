@@ -17,6 +17,25 @@ def test_cesitlendir_farkli_eser():
     assert "shamela_3" in ids[2]
 
 
+def test_kitabinda_cografya_rafini_acmaz():
+    from ilim_assistant.rag_store import _ortak_path_prefixes_for_query
+
+    prefs = _ortak_path_prefixes_for_query("Hicret nedir? Kaynak göster, hangi siyer kitabında geçer?")
+    assert not any("cografya" in p for p in prefs)
+    geo = _ortak_path_prefixes_for_query("Harita üzerinde enlem ve boylam nedir?")
+    assert any("cografya" in p for p in geo)
+
+
+def test_din_soruda_samile_cografyayi_ezer():
+    from ilim_assistant.rag_store import _din_sham_oncelik
+
+    geo = ("harita", "ortak_kaynak/alanlar/cografya/x.md", 0.9)
+    sham = ("هجرة", "ilim/din/shamela/24_siyer/shamela_9/a.md", 0.4)
+    out = _din_sham_oncelik([geo, sham], [sham], 2, din=True)
+    assert out and all("shamela" in h[1] for h in out)
+    assert _din_sham_oncelik([geo], [], 2, din=True) is None
+
+
 def test_kaynak_izi_eser_adi():
     metin = kaynak_izi_metni(
         [{"eser_ar": "بدائع الصنائع", "yazar_ar": "الكاساني"}, {"eser_ar": "", "yol_adi": ""}]
