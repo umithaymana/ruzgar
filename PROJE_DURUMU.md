@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-24 23:16 — din_d2_bm25 ölçüldü (doğru %73,1; kaynak %66,7).
+**Son güncelleme:** 2026-11-24 23:26 — K2 üslup dilimi + din lugat/anlık kaçış kapandı.
 
 ## YÖNETİCİ İZNİ — 2026-11-24 gece (Mimar, «özellikle not al»)
 
@@ -27,13 +27,13 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 ---
 
-## KALDIĞIMIZ YER — 2026-11-24 23:16 (din_d2_bm25 ölçüm bitti)
+## KALDIĞIMIZ YER — 2026-11-24 23:26 (K2 + kaçış dilimi)
 
-1. **Din 130 (`din_d2_bm25`):** doğru **%57,7 → %73,1** · bulamadım %31,5→**%3,8** · kapsama 0,57→**0,71** · ham 1 · kaynak verme **%66,7** (önce %0) · çoklu eser **%59,2** · uydurma şüphe 15 soru. Rapor: `docs/DIN_RAPOR_DIN_D2_BM25_2026-11-24.md`.
-2. **D2/K3 kod:** künye yolu + BM25 canlı (`5ff8ff691`).
-3. **Yeşil sayaç:** **3/23** (K0·K1·D1). D2/K3 hâlâ 🟡 — kalan zayıf: akaid/tasavvuf/siyer listeleri, bazı «kaynak göster», 1 ham, uydurma şüphe; bge-m3 05:30.
-4. **Sıradaki:** K2 üslup **veya** zayıf din sorularına nokta atışı · 05:30 bge-m3.
-5. **Dal:** `cursor/sohbet-akicilik-a-f` @ `5ff8ff691`.
+1. **K2 🟡:** `ruzgar_k2_uslup.py` — din→`alim`, din dışı→`sade_ogretmen`; kapat `RUZGAR_K2_USLUP=0`.
+2. **Kaçış kapandı:** akaid/sıfat/sûre «anlamı» Arapça Lane kartına düşmez; «kaynak göster» anlık siyer/fıkıh kartını atlar → RAG+künye. Canlı: sıfatlar hits5+alim; Hicret kaynak hits2+kunye.
+3. **Ölçüm (önceki):** `din_d2_bm25` doğru %73,1 · kaynak %66,7 — bu dilim sonrası kısa yeniden ölçüm isteğe bağlı.
+4. **Yeşil:** 3/23. Sıradaki: K2 yeşil ölçüt / akaid-tefsir kalan / 05:30 bge-m3.
+5. **Dal:** `cursor/sohbet-akicilik-a-f`.
 
 ---
 

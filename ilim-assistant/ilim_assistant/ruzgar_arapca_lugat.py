@@ -278,30 +278,41 @@ def looks_like_arapca_lugat_question(msg: str) -> bool:
         low,
     ):
         return False
-    cues = (
+    # Açık lügat/kök/nahiv — bunlar her zaman lügat yolu
+    _lugat_acik = (
         "lugat", "lügat", "sozluk", "sözlük", "kok", "kök", "mushtaq", "mushtak",
         "mustak", "nahiv", "sarf", "irab", "i'rab", "vezin", "masdar", "ism-i fail",
         "ism-i meful", "arapca ne demek", "arapça ne demek", "kelimesinin koku",
         "kelimenin koku", "lane", "morpholog", "morfoloji", "bab nedir",
         "harf-i cer", "mubteda", "mübteda", "fail nedir", "mushtaq nedir",
-        "müştak nedir", "ne demek", "anlami", "anlamı",
+        "müştak nedir",
     )
+    _lugat_acik_hit = any(_fold_tr(c) in low for c in _lugat_acik)
+    # K3/D2: din bilgi sorusu (sıfat, ru'yet, sûre anlamı…) kök/Lane kartına düşmesin.
+    # Yalnız açık lügat ipucu varsa lügat kalsın.
+    if not _lugat_acik_hit:
+        try:
+            from ilim_assistant.ruzgar_k3_sorgu import plan_for_query as _k3_plan
+
+            _p = _k3_plan(msg)
+            if _p is not None and _p.aktif:
+                return False
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_kutuphane_gorev import din_alani_sorusu
+
+            if din_alani_sorusu(msg):
+                return False
+        except Exception:
+            pass
+    cues = _lugat_acik + ("ne demek", "anlami", "anlamı")
     if any(_fold_tr(c) in low for c in cues):
         return True
     if re.search(r"[\u0600-\u06FF]{2,}", msg or "") and any(
         x in low for x in ("nedir", "ne demek", "anlam", "kok", "kök", "mana")
     ):
         return True
-    # K3: din kavram sözlüğünde özgül kavram (abdest/namaz/zekât/iman esasları…) varsa ve açık lügat/kök ipucu
-    # yoksa bu bir bilgi sorusudur → kök kartı değil kaynaklı cevap yolu. Kapat: RUZGAR_K3_DIN_SORGU=0.
-    try:
-        from ilim_assistant.ruzgar_k3_sorgu import plan_for_query as _k3_plan
-
-        _p = _k3_plan(msg)
-        if _p is not None and _p.aktif:
-            return False
-    except Exception:
-        pass
     # Latin kök: kısa bakış («islam nedir»). Uzun sohbet cümlesi lügate düşmez.
     root_hits = [
         tok

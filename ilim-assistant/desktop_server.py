@@ -12638,7 +12638,15 @@ def _library_instant_or_none(msg: str, try_fn) -> str | None:
 
     Soft «anlat/hakkında» defer'i, kütüphane bilgi sorusunda kartı engellemez —
     önce raftan/karttan oku; kapsamiyorsa indekse düş.
+    D2: «kaynak göster» → anlık kart yok; RAG + gerçek künye yolu.
     """
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import user_wants_kaynak
+
+        if user_wants_kaynak(msg):
+            return None
+    except Exception:
+        pass
     kutup_hard = False
     try:
         from ilim_assistant.ruzgar_kutuphane_gorev import (

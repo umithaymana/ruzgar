@@ -2908,6 +2908,18 @@ def prepare_turn(
 
     user_payload = append_direct_answer_directive(user_payload, msg)
     user_payload = _append_anti_repeat_instruction(user_payload, history)
+    try:
+        from ilim_assistant.ruzgar_k2_uslup import apply_uslup_to_payload
+
+        user_payload = apply_uslup_to_payload(
+            user_payload,
+            msg,
+            question_plan=turn_plan,
+            mode_norm=m,
+            orchestration_out=orchestration_out,
+        )
+    except Exception:
+        pass
 
     user_payload = append_wake_instruction(
         user_payload,

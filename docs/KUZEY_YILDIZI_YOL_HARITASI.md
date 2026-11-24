@@ -61,7 +61,11 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 - **Geri alma:** `RUZGAR_KUTUPHANE_HAM_DOKUM=1` (varsayılan 0) → eski ham döküm davranışı.
 - **K1 dışı bulgular (sıradaki kartlara):** hazır kart/kestirme isabetsizliği (başarısızların yarısı → O1) · Gemini cevaplarının ~%20'si cümle ortasında kesiliyor (ayrı hata) · din rafı %40'ta (abdest/namaz/oruç/hac kütüphanede yok; Arapça kaynak + Türkçe soru → K3, D1/D2) · «X kimdir?» bekçisi doğru kaynaksız cevapları reddediyor · Gemini kotası dolunca 3B yerel model kalitesiz.
 
-### K2 — Üslubu niyete bağla · ⬜ Bekliyor (KN-6) — *Mimar notu: din niyetinde varsayılan = âlim edası + herkesin anlayacağı açıklık (bkz. 6b); "sade öğretmen" yalnız din dışı*
+### K2 — Üslubu niyete bağla · 🟡 Yapılıyor (KN-6 · 2026-11-24) — *Mimar notu: din niyetinde varsayılan = âlim edası + herkesin anlayacağı açıklık (bkz. 6b); "sade öğretmen" yalnız din dışı*
+- **Yapılan:** `ruzgar_k2_uslup.py` — profiller `sohbet` / `sade_ogretmen` / `akademik` / `alim`; din/K3 → `alim`; `prepare_turn` talimatı; kapat `RUZGAR_K2_USLUP=0`. Canlı: akaid sorusunda `uslup=alim`.
+- **Yan (aynı tur):** din bilgi sorusu Arapça lugat/Lane kartına düşmez; «kaynak göster» anlık kütüphane kartını atlar → RAG+künye.
+- **Kalan (yeşil için):** altın sette vaaz tonu yok (din dışı) + din vakur; mühür testleri; el/ajan doğallık.
+- **Yeşil ölçütü:** Fizik/gündelik sorularda vaaz tonu yok (Mimar gözü + altın set); Kur'an/hadis/tefsirde vakur ton korunur (mevcut mühür testleri yeşil).
 - **Yapılacak:** Üslup profilleri: sohbet / sade öğretmen (varsayılan) / akademik / âlim. "Vakur ve edebî" yalnız din/âlim niyetinde. Kaynak cümle içinde doğal anılır.
 - **Bağımlılık:** K0
 - **Yeşil ölçütü:** Fizik/gündelik sorularda vaaz tonu yok (Mimar gözü + altın set); Kur'an/hadis/tefsirde vakur ton korunur (mevcut mühür testleri yeşil).
@@ -234,3 +238,4 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 | 2026-11-24 | D2 | 🟡 Künye yolu: idrak `clear()` bug kapandı; canlı kaynak izi gerçek künyeden. Test `test_d2_kunye_orch`. |
 | 2026-11-24 | K3 | 🟡 BM25 hibrit (aday Okapi, indirme yok). Kapat `RUZGAR_K3_BM25=0`. Din 130 yeniden ölçüm sırada. |
 | 2026-11-24 | K3+D2 | Ölçüm `din_d2_bm25`: doğru %57,7→**%73,1** · bulamadım %31,5→**%3,8** · kaynak %0→**%66,7** · çoklu eser %0→**%59,2** · fıkıh %33→**%72**. Rapor `DIN_RAPOR_DIN_D2_BM25_2026-11-24.md`. Kalan: akaid/tefsir zayıf, uydurma şüphe 15, bge-m3 05:30. |
+| 2026-11-24 | K2 | 🟡 Üslup profilleri (`ruzgar_k2_uslup`); din→âlim. Lugat kaçışı + kaynak-göster anlık kart yasağı. |
