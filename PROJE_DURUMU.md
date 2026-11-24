@@ -29,7 +29,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 ## KALDIĞIMIZ YER — 2026-11-25 00:20 (O1 kestirme kapısı)
 
-1. **O1 🟡:** `Karar.alan` + `kestirme_izinli`. Yanlış raf / lügat / sohbet şablonu / hava / programlama delege susar. 6 yönlendirici envanterde. Kalan: altın sette gerileme (yeşil değil).
+1. **O1 🟡:** `Karar.alan` + `kestirme_izinli`. Canlı 4 soru (`o1_kapi4` + `o1_hukuk05`): sinüs terminal kartı gitti ve geçti; medeni hukuk Mekkî kartı gitti ve geçti; sıfat akaid kartından çıktı (kapsama 0,5); matris hâlâ TDK kalıbı (kapsama 0). Kalan: tam altın set. Yeşil değil.
 2. **K2 / K3 / D2** hâlâ sarı. Yeşil: K0, K1, D1 (3/23).
 3. **Dal:** `cursor/sohbet-akicilik-a-f`. Gece işi bge-m3 05:30 duruyor; canlı indeks silinmez.
 
