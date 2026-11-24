@@ -1788,13 +1788,32 @@ def _explicit_research_intent(message: str) -> bool:
         "hadis",
         "ayet",
         "tefsir",
+        "namaz",
+        "abdest",
+        "oruç",
+        "oruc",
+        "zekat",
+        "zakat",
+        "hac ",
         "fizik",
         "kimya",
         "tarih",
         "güncel haber",
         "guncel haber",
     )
-    return any(c in blob for c in cues)
+    if any(c in blob for c in cues):
+        return True
+    # D2: «nasıl kılınır / nasıl yapılır» ibadet usulü — sohbet yoluna düşmesin
+    if re.search(r"nas[iı]l\s+(?:k[iı]l[iı]n|yap[iı]l|alin|al[iı]n)", blob):
+        return True
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import din_alani_sorusu
+
+        if din_alani_sorusu(raw):
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def is_casual_conversation_turn(

@@ -776,8 +776,8 @@ def grounding_directive(
         ]
         if want_source:
             k1.append(
-                "- Kullanıcı **kaynak istedi**: eser/yolu net söyle (yalnızca bağlamda görünen). "
-                "Sonunda **Kaynak izi:** ile [K1]… listele.\n"
+                "- Kullanıcı **kaynak istedi**: eser adını cümle içinde an (yalnızca bağlamda görünen). "
+                "**Kaynak izi:** bloğunu sen yazma — sistem kanıt künyesinden ekler.\n"
             )
         return "".join(k1)
     lines = [
@@ -796,8 +796,9 @@ def grounding_directive(
     ]
     if want_source:
         lines.append(
-            "- Kullanıcı **kaynak istedi**: net göster — eser/yol; mümkünse bölüm, numara, "
-            "sayfa (**yalnızca bağlamda varsa**). Sonunda **Kaynak izi:** ile [K1]… listele.\n"
+            "- Kullanıcı **kaynak istedi**: bağlamdaki eseri cümle içinde an. "
+            "**Kaynak izi:** bloğunu sen yazma — sistem kanıt künyesinden ekler; "
+            "uydurma eser/müellif listesi yasak.\n"
         )
     else:
         lines.append(

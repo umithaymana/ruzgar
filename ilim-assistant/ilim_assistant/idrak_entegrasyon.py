@@ -270,9 +270,11 @@ def append_idrak_agent_layer(
     )
     out = (user_payload or "").rstrip() + block
     if orchestration_out is not None:
+        # D2: clear() RAG/künye/k3 notlarını siliyordu → hits=0 + uydurma «Kaynak izi».
+        # Yalnız motors/query güncelle; mevcut orchestration anahtarları korunur.
         orch = build_orchestra_ui_payload(message, motor_flags=flags)
-        orchestration_out.clear()
-        orchestration_out.update(orch)
+        for key, val in orch.items():
+            orchestration_out[key] = val
     return out
 
 

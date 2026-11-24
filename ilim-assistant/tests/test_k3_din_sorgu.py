@@ -94,11 +94,24 @@ def test_kelime_tabanli_siralama_lexik_bonus():
     assert not k3.kanit_alakali_mi(p, [("باب الزكاة", "s", 0.5)])
 
 
+def test_bm25_terimli_parcayi_one_alir():
+    p = k3.plan_for_query("Abdesti bozan şeyler nelerdir?")
+    hits = [
+        ("كتاب الصلاة باب الجمعة والعيدين", "salat", 0.92),
+        ("من نواقض الوضوء خروج الخارج من السبيلين", "nawaqid", 0.41),
+        ("الوضوء شرط ونواقضه كثيرة", "wudu", 0.48),
+    ]
+    out = k3.bm25_rerank(hits, p)
+    assert out[0][1] in ("nawaqid", "wudu")
+    assert "salat" in {h[1] for h in out[1:]}
+
+
 def test_kanit_dil_notu_arapca_kanitta_cikar():
     ar_blok = ("[K1] x\nمن نواقض الوضوء خروج الخارج من السبيلين وزوال العقل بالنوم أو الإغماء", "src")
     tr_blok = ("[K1] y\nAbdest bozulması hakkında kısa Türkçe metin parçası burada", "src")
-    assert "ARAPÇA KANIT" in k3.kanit_dil_notu([ar_blok], want_source=True)
-    assert "Kaynak izi" in k3.kanit_dil_notu([ar_blok], want_source=True)
+    note = k3.kanit_dil_notu([ar_blok], want_source=True)
+    assert "ARAPÇA KANIT" in note
+    assert "sistem kanıt künyesinden" in note.lower() or "Kaynak izi" in note
     assert k3.kanit_dil_notu([tr_blok]) == ""
 
 

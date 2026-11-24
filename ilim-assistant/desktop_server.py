@@ -13190,12 +13190,14 @@ def _finalize_done_chat_turn(req: ChatRequest, done: dict[str, Any]) -> dict[str
     try:
         orch = obj.get("orchestra") if isinstance(obj.get("orchestra"), dict) else {}
         reply = str(obj.get("full_reply") or "")
-        if reply and "kaynak izi" not in reply.lower():
-            from ilim_assistant.ruzgar_kunye import kaynak_izi_metni
+        if reply:
+            from ilim_assistant.ruzgar_kunye import cevap_kaynak_izi_uygula
 
-            iz = kaynak_izi_metni(orch.get("kaynak_kunye") if isinstance(orch, dict) else None)
-            if iz:
-                obj["full_reply"] = reply.rstrip() + iz
+            # Model uydurma «Kaynak izi» yazsa bile kanıt künyesiyle değiştir / sil.
+            obj["full_reply"] = cevap_kaynak_izi_uygula(
+                reply,
+                orch.get("kaynak_kunye") if isinstance(orch, dict) else None,
+            )
     except Exception:
         pass
     try:

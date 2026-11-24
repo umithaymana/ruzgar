@@ -349,6 +349,144 @@ def blob_has_terms(text: str, plan: K3Plan | None) -> bool:
     return lex_skor(text, plan)[1] > 0
 
 
+def bm25_enabled() -> bool:
+    """K3 BM25 hibrit — varsayılan açık. Kapat: RUZGAR_K3_BM25=0."""
+    return os.environ.get("RUZGAR_K3_BM25", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _bm25_tokens(text: str, *, ar: bool) -> list[str]:
+    if ar:
+        t = ar_norm(text or "")
+        out: list[str] = []
+        for w in t.split():
+            # ال + bağlaç/önek — sözlük anahtarlarıyla hizala (Unicode, hardcode yasağı testi)
+            _al = "\u0627\u0644"  # ال
+            _pref = "\u0648\u0628\u0644\u0641\u0643"  # و ب ل ف ك
+            for _ in range(2):
+                if w.startswith(_al) and len(w) > 3:
+                    w = w[2:]
+                if len(w) > 3 and w[0] in _pref and not w.startswith(_al):
+                    w = w[1:]
+            if len(w) >= 2:
+                out.append(w)
+        return out
+    return [w for w in fold_tr(text or "").split() if len(w) >= 2]
+
+
+def bm25_rerank(
+    hits: Sequence[Any],
+    plan: K3Plan | None,
+    *,
+    k1: float = 1.5,
+    b: float = 0.75,
+    weight: float = 0.35,
+) -> list[Any]:
+    """Aday havuzunda Okapi BM25 (saf Python) — yoğun skorla harmanlar.
+
+    Yeniden indeks / model indirme yok; yalnız seçilmiş aday metinleri üzerinde.
+    Terim taşıyan parçalar, yüksek ama alakasız yoğun skoru geçebilir.
+    """
+    if not bm25_enabled() or plan is None or not plan.aktif or not hits:
+        return list(hits)
+    ar = (getattr(plan, "hedef_dil", "ar") or "ar") == "ar"
+    q_terms: list[str] = []
+    seen_q: set[str] = set()
+    for term in list(getattr(plan, "kelime_terimleri", None) or [])[:24]:
+        for w in _bm25_tokens(term, ar=ar):
+            if w not in seen_q:
+                seen_q.add(w)
+                q_terms.append(w)
+    for keys in list(getattr(plan, "kavram_anahtarlari", None) or [])[:16]:
+        for ws in keys or []:
+            for w in ws or []:
+                if w and w not in seen_q:
+                    seen_q.add(w)
+                    q_terms.append(w)
+    if not q_terms:
+        return list(hits)
+
+    docs: list[list[str]] = []
+    blobs: list[str] = []
+    raw: list[Any] = []
+    for h in hits:
+        try:
+            text = str(h[0] or "")
+            toks = _bm25_tokens(text, ar=ar)
+            docs.append(toks)
+            blobs.append(" ".join(toks))
+            raw.append(h)
+        except Exception:
+            continue
+    n = len(docs)
+    if n == 0:
+        return list(hits)
+    avgdl = sum(len(d) for d in docs) / float(n) or 1.0
+
+    def _term_hit(blob: str, toks: set[str], term: str) -> int:
+        if term in toks:
+            return 1 + sum(1 for t in toks if t == term) - 1
+        # bağlaçlı ekler: terim alt-dizgi olarak geçiyorsa isabet
+        if len(term) >= 3 and term in blob:
+            return 1
+        return 0
+
+    df: dict[str, int] = {}
+    for toks, blob in zip(docs, blobs):
+        ts = set(toks)
+        for term in q_terms:
+            if _term_hit(blob, ts, term) > 0:
+                df[term] = df.get(term, 0) + 1
+    import math
+
+    idf = {
+        t: math.log(1.0 + (n - c + 0.5) / (c + 0.5))
+        for t, c in df.items()
+    }
+    bm_raw: list[float] = []
+    for toks, blob in zip(docs, blobs):
+        if not toks and not blob:
+            bm_raw.append(0.0)
+            continue
+        ts = set(toks)
+        tf: dict[str, int] = {}
+        for term in q_terms:
+            f = _term_hit(blob, ts, term)
+            if f > 0 and term in idf:
+                tf[term] = f
+        dl = max(1, len(toks))
+        bm = 0.0
+        for t, f in tf.items():
+            denom = f + k1 * (1.0 - b + b * dl / avgdl)
+            bm += idf[t] * (f * (k1 + 1.0)) / (denom or 1.0)
+        bm_raw.append(bm)
+    any_hit = any(x > 0 for x in bm_raw)
+    scored: list[tuple[Any, float, int]] = []
+    for h, bm in zip(raw, bm_raw):
+        try:
+            dense = float(h[2])
+        except Exception:
+            dense = 0.0
+        bonus = weight * min(2.5, bm / 3.0)
+        has = 1 if bm > 0 else 0
+        if any_hit and bm <= 0:
+            # Alakasız yüksek yoğun skor — terimli parçanın önüne geçmesin
+            blend = dense * 0.55
+        else:
+            blend = dense + bonus
+        try:
+            scored.append(((h[0], h[1], blend), blend, has))
+        except Exception:
+            scored.append((h, dense, has))
+    # Önce terim isabeti, sonra harman skor
+    scored.sort(key=lambda x: (x[2], x[1]), reverse=True)
+    return [h for h, _, _ in scored]
+
+
 def kanit_alakali_mi(plan: K3Plan | None, hits: Sequence[Any]) -> bool:
     """Kanıt paketinde plan kavramlarından en az birini taşıyan parça var mı (usable kararı için)."""
     if plan is None or not plan.aktif:
@@ -403,7 +541,7 @@ def kanit_dil_notu(blocks: Iterable[Any], *, want_source: bool = False, cevap_di
     ]
     if want_source:
         lines.append(
-            "- Kullanıcı **kaynak istedi**: cevabın sonunda **Kaynak izi:** başlığı altında kullandığın her eseri "
-            "«[K#] Arapça eser adı — müellif» biçiminde listele (yalnız bağlamdaki künyeler).\n"
+            "- Kullanıcı **kaynak istedi**: bağlamdaki eseri cümle içinde an. "
+            "**Kaynak izi:** bloğunu sen yazma — sistem kanıt künyesinden ekler.\n"
         )
     return "".join(lines)

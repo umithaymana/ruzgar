@@ -173,6 +173,17 @@ def cesitlendir_eser(hits: Sequence[Any], limit: int = 4) -> list[Any]:
     return [best[k] for k in order][: max(1, limit)]
 
 
+def strip_kaynak_izi(reply: str) -> str:
+    """Modelin yazdığı «Kaynak izi» bloğunu kes (uydurma künye temizliği)."""
+    import re
+
+    t = reply or ""
+    m = re.search(r"(?is)(?:^|\n)\s*(?:\*\*)?Kaynak\s+izi\s*:?(?:\*\*)?\s*(?:\n|\Z)", t)
+    if not m:
+        return t
+    return t[: m.start()].rstrip()
+
+
 def kaynak_izi_metni(kunyeler: Sequence[dict[str, Any]] | None, *, limit: int = 4) -> str:
     """Cevap sonuna eklenecek künye. Kanıt künyesi yoksa boş."""
     lines: list[str] = []
@@ -190,6 +201,20 @@ def kaynak_izi_metni(kunyeler: Sequence[dict[str, Any]] | None, *, limit: int = 
     if not lines:
         return ""
     return "\n\nKaynak izi:\n" + "\n".join(lines)
+
+
+def cevap_kaynak_izi_uygula(
+    reply: str,
+    kunyeler: Sequence[dict[str, Any]] | None,
+    *,
+    limit: int = 4,
+) -> str:
+    """Uydurma «Kaynak izi»yi sil; kanıt künyesi varsa gerçek izi ekle."""
+    base = strip_kaynak_izi(reply or "")
+    iz = kaynak_izi_metni(kunyeler, limit=limit)
+    if not iz:
+        return base
+    return base.rstrip() + iz
 
 
 def label_for_source(src: str) -> str:

@@ -1,7 +1,7 @@
 # RÜZGAR — Kuzey Yıldızı Yol Haritası (kart panosu)
 
 **Kayıt:** 2026-11-23 · Mimar `kaydet` · Kaynak: İkinci Denetim Raporu (düzeltilmiş vizyon)
-**Başlangıç skoru:** 41/100 · **Hedef:** 365 günde 85+ · **Durum:** P0 — **K0 🟢 · K1 🟢 · D1 🟢** (3/23 yeşil, 2026-11-24) · K3 🟡 (TR→AR dilim) · sıradaki: **K3 devam** / **K2**
+**Başlangıç skoru:** 41/100 · **Hedef:** 365 günde 85+ · **Durum:** P0 — **K0 🟢 · K1 🟢 · D1 🟢** (3/23 yeşil, 2026-11-24) · K3 🟡 (TR→AR + BM25) · D2 🟡 (künye yolu) · sıradaki: **din 130 ölçüm** / **bge-m3 gece** / **K2**
 
 ---
 
@@ -32,7 +32,7 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 | Dalga | Kartlar | Yeşil | Hedef süre |
 |-------|---------|-------|-----------|
 | P0 — Doğallık ve güvenlik | 7 (D1 eklendi) | **3/7** (K0 🟢 · K1 🟢 · D1 🟢) | ilk 2 hafta |
-| P1 — Temel | 9 (D2 eklendi) | 0/9 · K3 🟡 | 2–8 hafta |
+| P1 — Temel | 9 (D2 eklendi) | 0/9 · K3 🟡 · D2 🟡 | 2–8 hafta |
 | P2 — Derinlik | 5 | 0/5 | 2–4 ay |
 | P3 — Temizlik | 2 | 0/2 | sürekli |
 | **Toplam** | **23** | **3/23** | |
@@ -85,11 +85,11 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 
 ## 4) P1 — 2–8 hafta
 
-### K3 — Hibrit arama + reranker + sorgu yeniden yazma · 🟡 Yapılıyor (KN-3, KN-7 · 2026-11-24 dilim)
-- **Yapılan (ilk dilim, yeniden indeks / model indirme YOK):** TR→AR terim sözlüğü `ilim-assistant/data/terim_sozlugu/din.json` · `ruzgar_k3_sorgu.py` · Şâmile'de Arapça sorgu + kelime tabanlı yeniden sıralama (`shamela_rag_shards.py`) · kapat `RUZGAR_K3_DIN_SORGU=0`.
-- **Yardımcı onarım (aynı tur):** ana `.rag_index/embeddings.npy` eksikti → `scripts/rag_ana_emb_onar.py` ile mevcut `chunks.jsonl`'den yeniden gömüldü · eski «bulamadım» sohbet kaydı hafızayı kilitlemesin (`ruzgar_tek_beyin.py`) · din soruları TDK tam-madde yoluna sapmasın (`chat_core._tdk_exact_path_allowed`) · altın set koşusu her soruda ayrı `device_id`.
-- **Kanıt (din rafı 130, web kapalı):** `din_baslangic` doğru **%36,2** → `din_k3_tdkfix` **%57,7** (+21,5 puan) · kapsama 0,392 → 0,573 · ham döküm 7 → **0** · rapor `docs/DIN_RAPOR_DIN_K3_TDKFIX_2026-11-24.md`. Fıkıh hâlâ zayıf (%33 doğru / %67 bulamadım); künye/kaynak gösterme %0 (D2).
-- **Kalan (yeşil için):** BM25 hibrit · bge-m3 sınıfı embedding + yeniden indeks (Mimar indirme/VRAM onayı) · yerel reranker · recall@5 ≥ +25 · gerileme yok.
+### K3 — Hibrit arama + reranker + sorgu yeniden yazma · 🟡 Yapılıyor (KN-3, KN-7 · 2026-11-24)
+- **Yapılan:** TR→AR sözlük + Arapça sorgu + kelime sıralama · **BM25 hibrit** (aday havuzu Okapi, saf Python; `RUZGAR_K3_BM25=0` kapatır) · kapat `RUZGAR_K3_DIN_SORGU=0`.
+- **Yardımcı onarım:** `embeddings.npy` onarımı · miss-hafıza kilidi · TDK-din sapması · altın set ayrı `device_id`.
+- **Kanıt (din 130, web kapalı):** %36,2 → **%57,7** (`din_k3_tdkfix`); BM25 sonrası **yeniden ölçüm bekliyor**.
+- **Kalan (yeşil için):** bge-m3 yan indeks (05:30 gece işi) · yerel reranker · din 130’da recall hedefi · gerileme yok.
 - **Bağımlılık:** K0, K1
 - **Yeşil ölçütü:** recall@5 başlangıca göre anlamlı artış (hedef ≥ +25 puan); gerileyen alan yok.
 
@@ -197,8 +197,10 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 - **Bağımlılık:** K0
 - **Yeşil ölçütü:** Koşucu din rafını ayrı raporlar; başlangıç çizgisi kaydedilmiş; uydurma kaynak denetleyicisi çalışıyor.
 
-### D2 — Âlim modu: çoklu eserden sentez + kaynak künyesi + sade açıklık · ⬜ Bekliyor (P1)
-- **Yapılacak:** Din/itikat/tasavvuf niyetinde kütüphane hizmeti 2–4 farklı eserden pasaj getirir (eser çeşitliliği kuralı), yeniden sıralar, **tek sentezde** birleştirir; "kaynak göster" isteğinde eser · müellif · bölüm · (varsa) hadis/ayet künyesi verir; cevap önce kısa ve herkesin anlayacağı özet, sonra isteğe bağlı derinlik. Tasavvuf rafı: kaynak eserlerin (Risâle-i Kuşeyriyye, İhyâ, Mesnevî, Fütûhât, Tasavvuf klasikleri vb.) kütüphanede bulunurluğu ve künyelenmesi denetlenir, eksikler Mimar'a **liste** olarak bildirilir (içerik ve lisans onayı Mimar'da).
+### D2 — Âlim modu: çoklu eserden sentez + kaynak künyesi + sade açıklık · 🟡 Yapılıyor (P1 · 2026-11-24)
+- **Yapılan:** eser çeşitlendirme (`cesitlendir_eser`) · kanıt künyesi (`kaynak_kunye`) · cevap sonu gerçek «Kaynak izi» (`cevap_kaynak_izi_uygula`) · idrak `clear()` bug’ı kapandı (hits/künye silinmiyor) · model uydurma izi kesilir · din/kütüphane casual hızlı yolu kapatılır.
+- **Canlı kanıt:** «Cuma namazı nasıl kılınır? Kaynak göster» → hits 5 · usable · 4 farklı eser künyesi (uydurma yok).
+- **Kalan (yeşil için):** din 130’da kaynak/çoklu eser oranı hedefe · uydurma 0 · fıkıh/kıssa zayıf sorular · tasavvuf eser listesi Mimar’a.
 - **Bağımlılık:** K1, K3, D1
 - **Yeşil ölçütü:** D1 din rafında doğru cevap, kaynak verme ve çoklu eser sentezi hedefte; uydurma kaynak 0; Kur'an/hadis/tefsir mühür testleri yeşil.
 
@@ -229,3 +231,5 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 | 2026-11-24 | D1 | 🟢 Yeşil: din 130 soru + `din-rapor` + başlangıç çizgisi + uydurma denetleyici + Şâmile envanteri. Sayaç 3/23. |
 | 2026-11-24 | K3 | 🟡 İlk dilim: TR→AR sözlük + Şâmile Arapça sorgu; din doğru %36,2 → %57,7 (`din_k3_tdkfix`). Kalan: BM25 / bge-m3 / reranker (indirme onayı). Yan onarım: `embeddings.npy` yeniden gömüldü; miss-hafıza kilidi; TDK-din sapması. |
 | 2026-11-24 | K3 | Mimar yönetici izni + «05:30 indir». Görev `Ruzgar-BGE-M3-Gece` 25.11.2026 05:30: bge-m3 iner, gömme yan klasöre (`shamela_bge_m3`). Canlı MiniLM silinmez, arama kendiliğinden geçmez. |
+| 2026-11-24 | D2 | 🟡 Künye yolu: idrak `clear()` bug kapandı; canlı kaynak izi gerçek künyeden. Test `test_d2_kunye_orch`. |
+| 2026-11-24 | K3 | 🟡 BM25 hibrit (aday Okapi, indirme yok). Kapat `RUZGAR_K3_BM25=0`. Din 130 yeniden ölçüm sırada. |

@@ -1026,13 +1026,20 @@ def search_shamela_shards(
                 _keep = [x for x in _scored if x[2] >= _gate_min]
                 _scored = _keep or _scored[:tk]
             _scored.sort(key=lambda x: (x[3], x[2]), reverse=True)
+            _out = [(t, s_, sc) for t, s_, sc, _n in _scored]
+            try:
+                from ilim_assistant.ruzgar_k3_sorgu import bm25_rerank
+
+                _out = bm25_rerank(_out, k3)
+            except Exception:
+                pass
             try:
                 from ilim_assistant.ruzgar_tur_teshis_f0 import note_k3
 
-                note_k3({**k3.ozet(), "aday": len(ranked), "lexik_isabet": len(_with), "donen": min(len(_scored), tk)})  # type: ignore[union-attr]
+                note_k3({**k3.ozet(), "aday": len(ranked), "lexik_isabet": len(_with), "donen": min(len(_out), tk), "bm25": True})  # type: ignore[union-attr]
             except Exception:
                 pass
-            return [(t, s_, sc) for t, s_, sc, _n in _scored][:tk]
+            return _out[:tk]
         except Exception:
             pass
     # Lexik bonus: soru kelimesi geçen parçayı öne al (yanlış semantik komşu ezmesin)

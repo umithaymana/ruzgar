@@ -354,6 +354,23 @@ def should_disable_casual_fast_path(message: str = "") -> bool:
     low = raw.lower()
     if re.search(r"\b(?:bilir\s*misin|bilirmisin)\b", low):
         return True
+    # D2/K3: din ve kütüphane bilgi sorusu casual hızlı yolu atlamasın
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import (
+            din_alani_sorusu,
+            is_kutuphane_bilgi_soru,
+        )
+
+        if din_alani_sorusu(raw) or is_kutuphane_bilgi_soru(raw):
+            return True
+    except Exception:
+        pass
+    if re.search(
+        r"kaynak\s*(?:g[oö]ster|ver|nedir)|nas[iı]l\s+k[iı]l[iı]n|"
+        r"abdest|namaz|oru[cç]|hac\b|zekat|zakat|hadis|ayet|tefsir",
+        low,
+    ):
+        return True
     return any(
         k in low
         for k in (
