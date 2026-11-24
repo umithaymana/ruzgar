@@ -486,6 +486,13 @@ def try_kuran_instant_reply(message: str) -> Optional[str]:
     msg = (message or "").strip()
     if not msg or not looks_like_kuran_question(msg):
         return None
+    try:
+        from ilim_assistant.ruzgar_o1_karar import karar_uret, kestirme_izinli
+
+        if not kestirme_izinli("kuran", karar_uret(msg), msg):
+            return None
+    except Exception:
+        pass
 
     try:
         from ilim_assistant.ruzgar_tefsir_kutuphane import looks_like_tefsir_followup

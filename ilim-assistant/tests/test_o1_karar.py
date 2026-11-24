@@ -44,9 +44,15 @@ def test_capraz_raf_susar():
     assert kestirme_izinli("bilim", matris, "Matris nedir?") is False
     assert kestirme_izinli("programlama", matris, "Matris nedir?") is False
 
-    hukuk = karar_uret("Medeni hukuk ile ceza hukuku farkı nedir?")
+    hukuk_q = "Medeni hukuk ile ceza hukuku arasındaki fark nedir?"
+    hukuk = karar_uret(hukuk_q)
     assert hukuk.alan == "hukuk"
-    assert kestirme_izinli("kuran", hukuk, "Medeni hukuk ile ceza hukuku farkı nedir?") is False
+    assert kestirme_izinli("kuran", hukuk, hukuk_q) is False
+    from ilim_assistant.ruzgar_kuran_anlik import try_kuran_instant_reply
+
+    assert try_kuran_instant_reply(hukuk_q) is None
+    mekki = try_kuran_instant_reply("Bakara suresi mekki mi?")
+    assert mekki is None or "Mekk" in mekki or "mekk" in mekki.lower() or "Meden" in mekki
 
     sifat = karar_uret("Sıfat nedir?")
     assert sifat.alan != "akaid"

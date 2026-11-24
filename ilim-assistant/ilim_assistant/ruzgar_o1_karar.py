@@ -60,6 +60,7 @@ _FN_AILE: dict[str, str] = {
     "try_teknoloji_reply": "teknoloji",
     "try_usul_fikh_reply": "usul",
     "try_fikh_reply": "fikh",
+    "try_kuran_instant_reply": "kuran",
     "try_kutuphane_instant_reply": "kutuphane",
     "try_bilgi_kutuphane_instant_reply": "kutuphane",
     "maybe_gundelik_instant_reply": "sohbet",
