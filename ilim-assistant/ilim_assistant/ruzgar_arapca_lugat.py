@@ -306,6 +306,13 @@ def looks_like_arapca_lugat_question(msg: str) -> bool:
                 return False
         except Exception:
             pass
+        try:
+            from ilim_assistant.ruzgar_o1_karar import kestirme_izinli
+
+            if not kestirme_izinli("lugat", None, msg):
+                return False
+        except Exception:
+            pass
     cues = _lugat_acik + ("ne demek", "anlami", "anlamı")
     if any(_fold_tr(c) in low for c in cues):
         return True

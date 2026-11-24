@@ -33,6 +33,13 @@ def try_instant_reply(message: str, mode_norm: str = "genel") -> str | None:
     if mode_norm not in ("genel", "gelisim", "uretim"):
         return None
     raw = (message or "").strip()
+    try:
+        from ilim_assistant.ruzgar_o1_karar import kestirme_izinli
+
+        if raw and not kestirme_izinli("sohbet", None, raw):
+            return None
+    except Exception:
+        pass
     if not raw or len(raw) > 120:
         return None
     # Tek yüz / atölye önekleri — selam kelimesi içinde olsa bile fast-lane ezmesin

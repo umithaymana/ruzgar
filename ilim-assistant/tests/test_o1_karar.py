@@ -26,8 +26,68 @@ def test_fizik_sade_ogretmen():
 
 def test_kapatma(monkeypatch):
     monkeypatch.setenv("RUZGAR_O1_KARAR", "0")
-    from ilim_assistant.ruzgar_o1_karar import attach_karar
+    from ilim_assistant.ruzgar_o1_karar import attach_karar, kestirme_izinli
 
     orch = {}
     assert attach_karar(orch, "Fotosentez nedir?") is None
     assert "karar" not in orch
+    assert kestirme_izinli("akaid", None, "Matris nedir?") is True
+
+
+def test_capraz_raf_susar():
+    from ilim_assistant.ruzgar_o1_karar import karar_uret, kestirme_izinli
+
+    matris = karar_uret("Matris nedir?")
+    assert matris.alan == "matematik"
+    assert matris.hedef_motor == "ana_motor"
+    assert kestirme_izinli("akaid", matris, "Matris nedir?") is False
+    assert kestirme_izinli("bilim", matris, "Matris nedir?") is False
+    assert kestirme_izinli("programlama", matris, "Matris nedir?") is False
+
+    hukuk = karar_uret("Medeni hukuk ile ceza hukuku farkı nedir?")
+    assert hukuk.alan == "hukuk"
+    assert kestirme_izinli("kuran", hukuk, "Medeni hukuk ile ceza hukuku farkı nedir?") is False
+
+    sifat = karar_uret("Sıfat nedir?")
+    assert sifat.alan != "akaid"
+    assert kestirme_izinli("akaid", sifat, "Sıfat nedir?") is False
+
+    zekat = karar_uret("Zekât kimlere verilir?")
+    assert zekat.alan in ("fikh", "din")
+    assert kestirme_izinli("fikh", zekat, "Zekât kimlere verilir?") is True
+    assert kestirme_izinli("lugat", zekat, "Zekât kimlere verilir?") is False
+
+
+def test_sohbet_ve_hava_ayri_kalir():
+    from ilim_assistant.ruzgar_o1_karar import delege_sonrasi_mod, karar_uret, kestirme_izinli
+
+    selam = karar_uret("selam")
+    assert selam.niyet == "sohbet"
+    assert kestirme_izinli("sohbet", selam, "selam") is True
+    assert kestirme_izinli("fikh", selam, "selam") is False
+
+    hava = karar_uret("Bugün hava nasıl?")
+    assert hava.niyet == "canli"
+    assert hava.canli is True
+    assert kestirme_izinli("hava", hava, "Bugün hava nasıl?") is True
+    assert kestirme_izinli("akaid", hava, "Bugün hava nasıl?") is False
+
+    sinus = karar_uret("Sinüs ve kosinüs nedir?", mode_norm="programlama")
+    assert sinus.hedef_motor == "ana_motor"
+    assert delege_sonrasi_mod("genel", "programlama", sinus) == "genel"
+
+
+def test_envanter_yonlendirici():
+    from ilim_assistant.ruzgar_o1_karar import kestirme_envanteri
+
+    rows = kestirme_envanteri()
+    yon = [r for r in rows if r["tur"] == "yonlendirici"]
+    assert len(yon) == 6
+    assert {r["ad"] for r in yon} == {
+        "sohbet",
+        "hava",
+        "programlama",
+        "lugat",
+        "kutuphane",
+        "web",
+    }

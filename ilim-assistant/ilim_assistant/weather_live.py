@@ -715,6 +715,13 @@ def maybe_weather_instant_reply(
     msg = (message or "").strip()
     if not msg:
         return None
+    try:
+        from ilim_assistant.ruzgar_o1_karar import kestirme_izinli
+
+        if not kestirme_izinli("hava", None, msg):
+            return None
+    except Exception:
+        pass
     weather_q = is_weather_query(msg)
     if not weather_q:
         try:

@@ -12647,6 +12647,18 @@ def _library_instant_or_none(msg: str, try_fn) -> str | None:
             return None
     except Exception:
         pass
+    try:
+        from ilim_assistant.ruzgar_o1_karar import (
+            aile_from_callable,
+            karar_uret,
+            kestirme_izinli,
+        )
+
+        _aile = aile_from_callable(try_fn)
+        if _aile and not kestirme_izinli(_aile, karar_uret(msg), msg):
+            return None
+    except Exception:
+        pass
     kutup_hard = False
     try:
         from ilim_assistant.ruzgar_kutuphane_gorev import (

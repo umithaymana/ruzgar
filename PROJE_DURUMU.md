@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-24 23:55 — pano-devam kuralı kilitlendi; O1 Karar kaydı başladı.
+**Son güncelleme:** 2026-11-25 00:20 — O1 kestirmeler Karar kaydına bağlandı (v2). Yeşil hâlâ 3/23.
 
 ## YÖNETİCİ İZNİ — 2026-11-24 gece (Mimar, «özellikle not al»)
 
@@ -27,7 +27,13 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 ---
 
-## KALDIĞIMIZ YER — 2026-11-24 23:26 (K2 + kaçış dilimi)
+## KALDIĞIMIZ YER — 2026-11-25 00:20 (O1 kestirme kapısı)
+
+1. **O1 🟡:** `Karar.alan` + `kestirme_izinli`. Yanlış raf / lügat / sohbet şablonu / hava / programlama delege susar. 6 yönlendirici envanterde. Kalan: altın sette gerileme (yeşil değil).
+2. **K2 / K3 / D2** hâlâ sarı. Yeşil: K0, K1, D1 (3/23).
+3. **Dal:** `cursor/sohbet-akicilik-a-f`. Gece işi bge-m3 05:30 duruyor; canlı indeks silinmez.
+
+## KALDIĞIMIZ YER — 2026-11-24 23:26 (K2 + kaçış dilimi, eski)
 
 1. **K2 🟡:** `ruzgar_k2_uslup.py` — din→`alim`, din dışı→`sade_ogretmen`; kapat `RUZGAR_K2_USLUP=0`.
 2. **Kaçış kapandı:** akaid/sıfat/sûre «anlamı» Arapça Lane kartına düşmez; «kaynak göster» anlık siyer/fıkıh kartını atlar → RAG+künye. Canlı: sıfatlar hits5+alim; Hicret kaynak hits2+kunye.

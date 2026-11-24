@@ -1929,6 +1929,13 @@ def maybe_gundelik_instant_reply(
     """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt."""
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return None
+    try:
+        from ilim_assistant.ruzgar_o1_karar import kestirme_izinli
+
+        if not kestirme_izinli("sohbet", None, message):
+            return None
+    except Exception:
+        pass
     # Madde 1: ezber gündelik şablon kapalı (varsayılan).
     try:
         from ilim_assistant.ruzgar_ezber_instant import ezber_instant_enabled

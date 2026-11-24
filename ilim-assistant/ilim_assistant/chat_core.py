@@ -1242,6 +1242,8 @@ def prepare_turn(
         except Exception:
             pass
 
+    mode_before_delege = m
+    delege_oldu = False
     if m != "programlama" and not coding_mode:
         try:
             from ilim_assistant.motorlar.programlama_faz10 import should_delegate_to_programlama
@@ -1250,6 +1252,7 @@ def prepare_turn(
                 msg, m, coding_mode=coding_mode, motor_flags=motor_flags
             ):
                 m = "programlama"
+                delege_oldu = True
         except Exception:
             pass
     turn_plan = question_plan
@@ -1270,12 +1273,34 @@ def prepare_turn(
         try:
             from ilim_assistant.ruzgar_o1_karar import attach_karar
 
-            attach_karar(
+            karar_obj = attach_karar(
                 orchestration_out,
                 msg,
                 mode_norm=m,
                 question_plan=turn_plan,
             )
+            if delege_oldu and karar_obj is not None:
+                from ilim_assistant.ruzgar_o1_karar import delege_sonrasi_mod
+
+                m2 = delege_sonrasi_mod(mode_before_delege, m, karar_obj)
+                if m2 != m:
+                    m = m2
+                    if _plan_enabled():
+                        turn_plan = plan_question(
+                            msg,
+                            m,
+                            motor_flags,
+                            history=history,
+                            idrak_pre=_turn_idrak,
+                        )
+                        if orchestration_out is not None and turn_plan is not None:
+                            orchestration_out["plan"] = turn_plan.to_dict()
+                    attach_karar(
+                        orchestration_out,
+                        msg,
+                        mode_norm=m,
+                        question_plan=turn_plan,
+                    )
         except Exception:
             pass
     except Exception:
