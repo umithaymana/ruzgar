@@ -908,6 +908,18 @@ def maybe_programlama_instant_reply(
 ) -> str | dict[str, Any] | None:
     """Programlama motoruna özel anında yanıtlar (LLM turu atlanır)."""
     try:
+        from ilim_assistant.ruzgar_o1_karar import karar_uret, kestirme_izinli
+
+        _karar = karar_uret(message, mode_norm=mode_norm or "genel")
+        if not kestirme_izinli("programlama", _karar, message):
+            if not (
+                (mode_norm or "") == "programlama"
+                and _karar.alan in ("genel", "bilgisayar", "teknoloji", "dil")
+            ):
+                return None
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_router import dispatch_instant_reply
 
         return dispatch_instant_reply(

@@ -69,7 +69,7 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 - **Yeşil ölçütü:** Fizik/gündelik sorularda vaaz tonu yok (Mimar gözü + altın set); Kur'an/hadis/tefsirde vakur ton korunur (mevcut mühür testleri yeşil).
 
 ### O1 — Tek Niyet Kararı · 🟡 Yapılıyor (OR-1, KN-5 · 2026-11-24)
-- **Yapılan:** `ruzgar_o1_karar.py` — turda bir `Karar` (niyet, hedef motor, canlı, kütüphane, üslup, bütçe, güven, alan). Kestirmeler `kestirme_izinli` ile bu kayda bağlı: yanlış raf, lügat, sohbet şablonu, hava ve programlama delege’si susar. 6 yönlendirici envanteri kodda (`kestirme_envanteri`). Kapat `RUZGAR_O1_KARAR=0`.
+- **Yapılan:** `ruzgar_o1_karar.py` — turda bir `Karar` (niyet, hedef motor, canlı, kütüphane, üslup, bütçe, güven, alan). Kestirmeler `kestirme_izinli` ile bu kayda bağlı: yanlış raf, lügat, sohbet şablonu, hava, programlama delege’si ve programlama anlık kartı (sinüs → terminal) susar. 6 yönlendirici envanteri kodda (`kestirme_envanteri`). Kapat `RUZGAR_O1_KARAR=0`.
 - **Kalan (yeşil için):** altın sette gerileme yok. Tarihsel 168 sayımı ve ölü kayıtların emekliliği X1. Boot sırası değişmez.
 - **Yapılacak:** Her turda bir kez üretilen tek `Karar` kaydı: niyet · hedef motor · canlı bilgi ihtiyacı · kütüphane uygunluğu · üslup · zaman bütçesi · güven. Kestirmeler bu karara tabi olur. 6 yönlendirici ve 168 kestirme için envanter + kullanım ölçümü; ölü olanlar P3'te emekliye.
 - **Bağımlılık:** K0

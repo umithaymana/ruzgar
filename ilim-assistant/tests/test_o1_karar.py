@@ -75,6 +75,10 @@ def test_sohbet_ve_hava_ayri_kalir():
     sinus = karar_uret("Sinüs ve kosinüs nedir?", mode_norm="programlama")
     assert sinus.hedef_motor == "ana_motor"
     assert delege_sonrasi_mod("genel", "programlama", sinus) == "genel"
+    from ilim_assistant.motorlar.programlama_motoru import maybe_programlama_instant_reply
+
+    assert maybe_programlama_instant_reply("Sinüs ve kosinüs nedir?", "genel") is None
+    assert maybe_programlama_instant_reply("Sinüs ve kosinüs nedir?", "programlama") is None
 
 
 def test_envanter_yonlendirici():
