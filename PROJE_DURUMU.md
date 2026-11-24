@@ -6,14 +6,14 @@
 
 Plan işlerken **tüm yönetici izinleri açık**. İndirme ve kurulum serbest. Mimar bilgisayarın başında olmayabilir; plan aksamasın diye ajan gereken dosyayı indirip kurabilir. Bu izin bir kerelik 05:30 işine sıkışmaz, sonraki plan adımlarını da kapsar. Canlı MiniLM indeksini silmek bu iznin parçası değildir: yeni model yan klasöre yazılır, geçiş ayrı bakılır.
 
-## DURUM EMRİ — pano bitene kadar (Mimar, 2026-11-24 21:44)
+## DURUM EMRİ — pano bitene kadar (Mimar, 2026-11-24 21:44 · pekiştirme 23:55)
 
-Kuzey Yıldızı panosundaki **tüm kartlar** (bugün 23; Mimar «21-21» dedi, eklenen D1/D2 dahil hepsi) yeşil olana kadar:
+Kuzey Yıldızı panosundaki **tüm kartlar** (23; D1/D2 dahil) yeşil olana kadar. Yeni sohbet veya ajan değişse de geçerli. Kural dosyası: `.cursor/rules/ruzgar-pano-bitene-devam-FROZEN.mdc`.
 
 - Ajan sıradaki işe soru sormadan devam eder.
-- İş dilimi oturunca **commit ve push** kendisi yapar. Bu da iznin içindedir.
+- Dilim bitince **commit ve push**, sonra hemen sonraki kart. «Devam edeyim mi?» yok.
 - Yönetici, indirme ve kurulum aynı kapsamdadır.
-- Canlı MiniLM indeksini silmek ve aramayı yeni modele habersiz geçirmek bu emrin parçası değildir.
+- Canlı MiniLM indeksini silmek, aramayı habersiz geçirmek, `projects/` silmek ve kartta açıkça Mimar onayı yazan yıkıcı adım bu emrin parçası değildir.
 
 ## GECE İŞİ — 25.11.2026 05:30 (Türkiye)
 

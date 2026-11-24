@@ -1,0 +1,28 @@
+---
+description: Kuzey Yıldızı panosu bitene kadar durmadan devam — dilim bitince commit ve push, sonra sıradaki kart
+alwaysApply: true
+---
+
+# Rüzgar — pano bitene kadar devam (FROZEN — Mimar, 2026-11-24 23:55)
+
+Mimar net talimatı. Yeni sohbet açılsa veya ajan değişse de bu kural durur. Ajan kendi başına gevşetemez.
+
+## Kapsam
+
+Kuzey Yıldızı panosu (`docs/KUZEY_YILDIZI_YOL_HARITASI.md`) **23 kartın hepsi yeşil** olana kadar geçerlidir. Bu süre boyunca 2026-11-08 onay kapısı **yalnız bu pano işi için** açıktır: sıradaki karta başlamak, dosya yazmak, test, sunucuyu yeniden başlatmak, **commit ve push** için ayrıca `yap` / `evet` beklenmez.
+
+Pano dışı konu (yeni özellik, kilitli yüzü bozmak, sohbet muhabbeti) hâlâ onay kapısındadır.
+
+## Döngü
+
+1. Sıradaki kartı panodan al (P0 → P1 → P2 → P3; bağımlılık bağlayıcı).
+2. Dilimi bitir, test et.
+3. **Commit ve push** — dilim oturunca, sormadan.
+4. `PROJE_DURUMU.md` içinde kaldığımız yeri güncelle.
+5. Hemen sonraki karta geç. «Devam edeyim mi?» diye sorma.
+
+## Dokunulmazlar (bu emir açmaz)
+
+- Motor boot sırası, arayüz kilidi, anayasa, cevap emri.
+- Canlı MiniLM indeksini silmek ve aramayı yeni modele habersiz geçirmek.
+- Kartın kendi metninde Mimar onayı yazan yıkıcı adım: `projects/` silme, lisanslı kaynak ekleme, canlı indeks değiştirme. Bunlarda liste ver, onay bekle; diğer kartlara devam et.
