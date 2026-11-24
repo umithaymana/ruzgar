@@ -70,7 +70,7 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 
 ### O1 — Tek Niyet Kararı · 🟡 Yapılıyor (OR-1, KN-5 · 2026-11-24)
 - **Yapılan:** `ruzgar_o1_karar.py` — turda bir `Karar` (niyet, hedef motor, canlı, kütüphane, üslup, bütçe, güven, alan). Kestirmeler `kestirme_izinli` ile bu kayda bağlı: yanlış raf, lügat, sohbet şablonu, hava, programlama delege’si ve programlama anlık kartı (sinüs → terminal) susar. 6 yönlendirici envanteri kodda (`kestirme_envanteri`). Kapat `RUZGAR_O1_KARAR=0`.
-- **Kalan (yeşil için):** altın sette gerileme yok. Tarihsel 168 sayımı ve ölü kayıtların emekliliği X1. Boot sırası değişmez.
+- **Kalan (yeşil için):** ortak 240’ta 24 eski geçen soru düştü (teknoloji ağır). Ham döküm 0→4. Tarihsel 168 sayımı ve ölü kayıtların emekliliği X1. Boot sırası değişmez.
 - **Yapılacak:** Her turda bir kez üretilen tek `Karar` kaydı: niyet · hedef motor · canlı bilgi ihtiyacı · kütüphane uygunluğu · üslup · zaman bütçesi · güven. Kestirmeler bu karara tabi olur. 6 yönlendirici ve 168 kestirme için envanter + kullanım ölçümü; ölü olanlar P3'te emekliye.
 - **Bağımlılık:** K0
 - **Yeşil ölçütü:** `prepare_turn` kararı tek yerden alır; aynı soru her koşuda aynı yolu izler (tekrarlanabilirlik testi); altın sette gerileme yok. Boot sırası değişmez.
@@ -242,3 +242,4 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 | 2026-11-24 | — | Mimar 23:55: pano bitene kadar durmadan devam, dilim bitince commit+push. Kural `.cursor/rules/ruzgar-pano-bitene-devam-FROZEN.mdc`. |
 | 2026-11-24 | O1 | 🟡 Tek `Karar` kaydı (`ruzgar_o1_karar`). Kestirmeler henüz bağlanmadı. |
 | 2026-11-25 | O1 | 🟡 Kestirmeler Karar’a bağlandı (`kestirme_izinli`, v2). 6 yönlendirici envanterde. Kalan: altın sette gerileme yok. |
+| 2026-11-25 | O1 | Ölçüm `o1_tam` 350 soru: geçti %82,3 · bulamadım %1,1 · ham 4 · medyan 7,41 sn. Ortak 240: %77,9→%81,2 (32 düzeldi, 24 düştü). Din 130: %84,6, ham 0. Düşen raf: teknoloji %80→%50, matematik %80→%70. Yeşil değil. |

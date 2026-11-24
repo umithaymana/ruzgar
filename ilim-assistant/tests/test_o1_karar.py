@@ -58,6 +58,10 @@ def test_capraz_raf_susar():
     assert sifat.alan != "akaid"
     assert kestirme_izinli("akaid", sifat, "Sıfat nedir?") is False
 
+    py = karar_uret("Python nedir?")
+    assert kestirme_izinli("bilgisayar", py, "Python nedir?") is True
+    assert kestirme_izinli("akaid", py, "Python nedir?") is False
+
     zekat = karar_uret("Zekât kimlere verilir?")
     assert zekat.alan in ("fikh", "din")
     assert kestirme_izinli("fikh", zekat, "Zekât kimlere verilir?") is True

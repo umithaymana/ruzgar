@@ -432,6 +432,10 @@ def kestirme_izinli(aile: str, karar: Karar | None, message: str = "") -> bool:
         if alan == "din" and a in _DIN_ALAN:
             return True
         if alan == "genel":
-            return _looks_strong(a, message)
+            # Din rafları belirsiz tek kelimede (sıfat, medenî) susar.
+            # Fen/teknik kart, soruyu kendi kavramıyla tutuyorsa açık kalır.
+            if a in _DIN_ALAN:
+                return _looks_strong(a, message)
+            return True
         return False
     return True
